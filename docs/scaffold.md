@@ -42,7 +42,7 @@ The first scaffold serves a generated landing page, the interactive document she
 
 ## Toolchain baseline
 
-The following pins were resolved and built on October 2, 2026. Lockfiles record the complete dependency graphs. Verification includes the installed compiler, pinned Node runtime, frontend build, Rust checks, and browser tests.
+The baseline pins were resolved and built on October 2, 2026; the selected Rust maintenance updates were verified on October 4. Lockfiles record the complete dependency graphs. Verification includes the installed compiler, pinned Node runtime, frontend build, Rust checks, and browser tests.
 
 | Tool or dependency | Pin | Selection |
 | --- | --- | --- |
@@ -63,7 +63,9 @@ The following pins were resolved and built on October 2, 2026. Lockfiles record 
 | Rust | `1.99.0`, edition `2024` | Exact compiler in `rust-toolchain.toml` |
 | Axum / Tokio | `0.8.9` / `1.53.1` | HTTP and structured asynchronous execution |
 | SQLx | `0.9.0` | SQLite; requires Rust 1.94 or newer |
-| `resend-rs` | `0.32.3` | Documented SDK baseline with base-URL configuration |
+| `resend-rs` | `0.33.0` | Custom endpoint, authentication, request format, and retry behavior verified by adapter tests |
+| `tower-http` | `0.7.1` | HTTP middleware; compiled and verified through full-stack browser tests |
+| `getrandom` / `ipnet` | `0.4.3` / `2.12.2` | Infrastructure randomness and trusted proxy networks; existing tests passed |
 | Utoipa | `6.0.0` | Rust-derived OpenAPI |
 | `thiserror` / `proptest` | `2.0.21` / `1.11.0` | Typed Rust errors and domain property tests |
 
@@ -71,7 +73,7 @@ Node's [release schedule](https://nodejs.org/en/about/previous-releases) and Vit
 
 The Lit skill selects Vitest 4. Effect 3's [`@effect/vitest` 0.30.0 metadata](https://registry.npmjs.org/@effect%2Fvitest/0.30.0) requires Vitest 3, so do not install that integration or a second runner. Use the scoped workflow test adapter described in the frontend document. A newer Effect major is not an automatic substitute for the requested skill's version 3 APIs.
 
-The selected [Resend SDK documentation](https://docs.rs/resend-rs/0.32.3/resend_rs/index.html) describes the required `RESEND_API_KEY` and `RESEND_BASE_URL` behavior. A newer SDK can be adopted when adapter tests demonstrate the same custom-endpoint behavior; it is not required merely because the registry lists it.
+The selected [Resend SDK documentation](https://docs.rs/resend-rs/0.33.0/resend_rs/index.html) describes the required `RESEND_API_KEY` and `RESEND_BASE_URL` behavior. The update to 0.33.0 passed the existing custom-endpoint adapter test. Later SDK versions can be adopted when those tests demonstrate the same behavior; an update is not required merely because the registry lists it.
 
 Commit application lockfiles, the exact package manager and compiler selections, and the final tested version table. Container builds use those locks and frozen installs. Resolve and record base-image digests when creating the Dockerfile. Run verification locally through `pnpm run ci`; GitHub Actions and automatic dependency-update PR creation are disabled. Do not use `latest` as a reproducibility policy.
 

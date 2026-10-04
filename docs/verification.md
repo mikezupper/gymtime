@@ -1,6 +1,24 @@
 # Verification
 
-## Public release preparation — October 4, 2026
+## Local verification and dependency review — October 4, 2026
+
+`pnpm run ci` passed locally with Resend 0.33.0, ipnet 2.12.2, Tower HTTP 0.7.1, and getrandom 0.4.3. It ran source and documentation checks, twelve Vitest tests, 43 Rust tests, eighteen browser-component cases, sixteen full-stack browser cases, the native build, and the production container build. After merging the four updates, the committed Cargo manifest and lockfile matched the tested files byte for byte.
+
+| PR | Result | Evidence or reason |
+| --- | --- | --- |
+| [#1](https://github.com/mikezupper/gymtime/pull/1), SHA-2 0.11 | Closed | Local infrastructure compilation failed: its digest traits are incompatible with the pinned HMAC 0.12 dependency |
+| [#2](https://github.com/mikezupper/gymtime/pull/2), Resend 0.33 | Merged | Local suite passed, including custom URL prefix, API-key authentication, send format, and retry coverage |
+| [#3](https://github.com/mikezupper/gymtime/pull/3), ipnet 2.12.2 | Merged | Local suite passed, including trusted-proxy address handling |
+| [#4](https://github.com/mikezupper/gymtime/pull/4), Tower HTTP 0.7.1 | Merged | Local compilation and full-stack tests passed |
+| [#5](https://github.com/mikezupper/gymtime/pull/5), getrandom 0.4.3 | Merged | Local suite passed; a manifest conflict was resolved to the tested combined files |
+| [#6](https://github.com/mikezupper/gymtime/pull/6), Effect 4 | Closed | Preserve the selected Effect 3 APIs and compatible companion packages; the proposal retained a platform package requiring Effect 3 |
+| [#7](https://github.com/mikezupper/gymtime/pull/7), Node 26 image | Closed | Keep the container aligned with the pinned Node 24 development runtime and package engines |
+| [#8](https://github.com/mikezupper/gymtime/pull/8), Vitest 5 | Closed | Preserve the selected Vitest 4 runner and matching browser provider; a major migration requires separate review |
+| [#9](https://github.com/mikezupper/gymtime/pull/9), Node 26 types | Closed | Keep declarations aligned with the Node 24 runtime |
+
+GitHub Actions is disabled, hosted workflows and Dependabot version-update configuration are removed, and automatic security-update PRs are disabled. GitHub security alerts and secret-scanning protection remain enabled. Maintenance checks now run locally; no VPS deployment or live email delivery is claimed.
+
+## Initial public release preparation — October 4, 2026
 
 The public release preparation passed `pnpm check`, twelve Vitest unit tests, 43 Rust tests, eighteen browser-component cases, sixteen full-stack browser cases, and the native build. Documentation checking covered 22 files and 135 local links. All seven published skill pins passed hash verification. Online update discovery also worked without applying an update.
 

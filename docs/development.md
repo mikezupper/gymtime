@@ -44,6 +44,20 @@ pnpm build
 
 After changing API DTOs, run `pnpm contract:generate`. After changing migrations, run `pnpm schema:generate`. Review the generated files with their sources. The application uses runtime SQLx queries and therefore needs no `.sqlx` offline metadata.
 
+## Run the full suite locally
+
+After installing the check tools and browser engines, run:
+
+```bash
+pnpm ci
+```
+
+This command runs source and documentation checks, unit and Rust tests, Chromium and WebKit component and full-stack tests, the native build, and the Linux x86_64 production container build. Docker must be available. It stops at the first failure and returns a nonzero exit code. It builds `gymtime:verification` with a fictional public origin; it does not publish an image or deploy the app. End-to-end services use disposable local state and stop when their suite finishes.
+
+GitHub Actions is disabled at the repository level, and no hosted workflow is committed. Automatic dependency-update PR creation is also disabled. Security alerts and secret-scanning protection remain enabled. Contributors and maintainers run these commands locally and report evidence before merging.
+
+Check JavaScript updates with `pnpm outdated -r`. Review Rust updates against upstream release notes and the locked dependency graph. Change only selected package requirements and regenerate the relevant lockfile; do not upgrade a pinned major as a routine maintenance change. Effect companion packages must stay compatible with Effect 3, Vitest stays on the selected version 4 line, and Node runtime and types stay on version 24. Skill update discovery remains a separate manual command.
+
 ## Run the local containers
 
 ```bash

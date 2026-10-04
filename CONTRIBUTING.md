@@ -38,7 +38,7 @@ pnpm build
 
 Documentation-only changes need `pnpm docs:check` and a review against the current code. API changes also need regenerated contracts; migration changes need regenerated schema documentation. Use tests that demonstrate behavior, permissions, or failure handling. Avoid tests that merely repeat the implementation.
 
-For interface changes, inspect desktop and narrow layouts, keyboard interaction, and both browser engines. Include sanitized screenshots when they help reviewers understand the result. Update durable requirements or designs when behavior changes, and report checks you could not run. CI runs the full suite and builds the container.
+For interface changes, inspect desktop and narrow layouts, keyboard interaction, and both browser engines. Include sanitized screenshots when they help reviewers understand the result. Update durable requirements or designs when behavior changes, and report checks you could not run. Run `pnpm ci` for the full local suite and container build when Docker is available. GitHub does not run checks for this repository, so include local verification results in the PR.
 
 ## Submit a focused pull request
 

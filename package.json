@@ -7,6 +7,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
+    "ci": "tsx tools/ci.ts",
     "dev": "tsx tools/dev.ts",
     "dev:api": "tsx tools/dev.ts api",
     "check": "tsx tools/check.ts",

@@ -1,6 +1,6 @@
 # Gymtime
 
-[![CI](https://github.com/mikezupper/gymtime/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mikezupper/gymtime/actions/workflows/ci.yml)
+[![Verification](https://img.shields.io/badge/verification-local-2563eb)](docs/development.md#run-the-full-suite-locally)
 [![License: MIT](https://img.shields.io/github/license/mikezupper/gymtime)](LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/mikezupper/gymtime)](https://github.com/mikezupper/gymtime/issues)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen)](CONTRIBUTING.md)
@@ -97,8 +97,11 @@ pnpm test:e2e
 pnpm build
 ```
 
+With Docker available, `pnpm ci` runs all five commands above and builds the production container. Verification runs on your machine. GitHub Actions and automatic dependency-update PRs are disabled; contributors report their local results with each PR.
+
 | Command | Result |
 | --- | --- |
+| `pnpm ci` | Full local verification, native build, and production container build; requires Docker |
 | `pnpm check` | TypeScript, ESLint, strict Lit templates, Rust formatting/Clippy, dependency policy, architecture, contracts, migrations, docs, and public skill hashes |
 | `pnpm test:unit` | Vitest, Rust nextest, and Rust doctests |
 | `pnpm test:browser` | Real custom-element tests in Chromium and WebKit |
@@ -107,7 +110,7 @@ pnpm build
 | `pnpm contract:generate` / `pnpm schema:generate` | Regenerate API types or migration documentation after changing their sources |
 | `pnpm docs:check` / `pnpm architecture:check` | Focused documentation or boundary checks |
 
-The Docker build creates the optimized Rust release binary and packages it with frontend assets. Node is a build dependency and is absent from the application runtime image. CI runs checks, tests, the native build, and a container build. Local database and browser reports remain ignored.
+The Docker build creates the optimized Rust release binary and packages it with frontend assets. Node is a build dependency and is absent from the application runtime image. Local database and browser reports remain ignored. Dependency updates are selected manually, reviewed against the pinned stack, and verified locally before merging. GitHub security alerts and secret-scanning protection remain enabled.
 
 ## Deploy with Docker Compose
 

@@ -28,7 +28,7 @@ resend-rs = { version = "=0.32.3", default-features = false, features = ["rustls
 reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "json"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
-tower-http = { version = "0.6.8", features = ["fs", "trace", "catch-panic", "set-header", "timeout"] }
+tower-http = { version = "0.7.1", features = ["fs", "trace", "catch-panic", "set-header", "timeout"] }
 tower = { version = "0.5.3", features = ["util"] }
 url = "2.5.8"
 secrecy = "0.10.3"

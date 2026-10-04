@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Checks and tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+      - name: Install pinned dependencies
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          rustup show
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0 # v2.87.24
+        with:
+          tool: cargo-nextest@0.9.143,cargo-deny@0.20.2
+      - name: Install browser engines and system libraries
+        run: pnpm exec playwright install --with-deps chromium webkit
+      - name: Check source and documentation
+        run: pnpm check
+      - name: Unit and Rust tests
+        run: pnpm test:unit
+      - name: Browser component tests
+        run: pnpm test:browser
+      - name: Full-stack browser tests
+        run: pnpm test:e2e
+      - name: Native build
+        run: pnpm build
+
+  container:
+    name: Container build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the production image
+        run: docker build --platform linux/amd64 --tag gymtime:ci --build-arg PUBLIC_SITE_URL=https://gym.example.test .

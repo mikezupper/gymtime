@@ -1,0 +1,32 @@
+name: Bug report
+description: Report behavior that differs from what you expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Use fictional accounts and sanitized details. Do not share secrets, database files, sign-in codes, cookies, or real team-calendar links. Report vulnerabilities through the repository's Security tab.
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Describe the affected role, the result, and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include the smallest example that reproduces the problem.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and sanitized evidence
+      description: Native or Docker, operating system, browser, and relevant logs or screenshots with private details removed.

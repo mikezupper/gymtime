@@ -1,0 +1,27 @@
+[package]
+name = "gymtime-api"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+gymtime-app.workspace = true
+gymtime-domain.workspace = true
+axum.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+utoipa.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+thiserror.workspace = true
+ipnet.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+tower.workspace = true

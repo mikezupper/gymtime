@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+minimumReleaseAgeExclude:
+  - '@types/node@24.19.1'
+allowBuilds:
+  esbuild: true
+  "@parcel/watcher": false
+  msgpackr-extract: false
+
+overrides:
+  lit-analyzer>vscode-css-languageservice: 6.3.10

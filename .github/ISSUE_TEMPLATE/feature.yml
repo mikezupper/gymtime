@@ -1,0 +1,23 @@
+name: Feature proposal
+description: Explain a problem and propose a change.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What task is difficult today?
+      description: Explain whose task it is and what gets in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the outcome and how it fits a shared basketball gym.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and examples
+      description: Include useful context using fictional teams and accounts.

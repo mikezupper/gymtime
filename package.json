@@ -1,0 +1,53 @@
+{
+  "name": "gymtime",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.8.2",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "tsx tools/dev.ts",
+    "dev:api": "tsx tools/dev.ts api",
+    "check": "tsx tools/check.ts",
+    "test:unit": "vitest run --project unit && cargo nextest run --workspace --all-features --locked && cargo test --workspace --doc --locked",
+    "test:browser": "vitest run --project browser",
+    "test:e2e": "playwright test",
+    "build": "pnpm contract:generate && pnpm --filter @gymtime/web build && cargo build --locked -p gymtime-server",
+    "contract:generate": "tsx tools/contracts.ts generate",
+    "contract:check": "tsx tools/contracts.ts check",
+    "skills:check": "tsx tools/skills.ts check",
+    "skills:update": "tsx tools/skills.ts update",
+    "docs:check": "tsx tools/check.ts docs",
+    "architecture:check": "tsx tools/check.ts architecture",
+    "schema:generate": "tsx tools/schema.ts generate"
+  },
+  "devDependencies": {
+    "@effect/language-service": "0.87.3",
+    "@types/node": "24.19.1",
+    "@vitest/browser-playwright": "4.1.11",
+    "@playwright/test": "1.63.0",
+    "playwright": "1.63.0",
+    "vitest": "4.1.11",
+    "typescript": "5.9.3",
+    "tsx": "4.23.15",
+    "eslint": "10.11.0",
+    "typescript-eslint": "8.71.0",
+    "eslint-plugin-lit": "2.3.1",
+    "eslint-plugin-wc": "3.1.0",
+    "lit-analyzer": "2.0.3",
+    "ts-lit-plugin": "2.0.2",
+    "openapi-typescript": "7.13.0",
+    "@effect/platform": "0.97.2",
+    "@effect/platform-node": "0.108.2",
+    "effect": "3.22.2",
+    "@axe-core/playwright": "4.13.0",
+    "lit": "3.3.3",
+    "@gymtime/contracts": "workspace:*"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikezupper/gymtime.git"
+  }
+}

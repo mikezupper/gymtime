@@ -1,0 +1,47 @@
+import { Schema } from "effect";
+import type { components } from "@gymtime/contracts";
+export type ScheduleAction = components["schemas"]["ActionBody"];
+const Id = Schema.Number.pipe(Schema.int(), Schema.positive());
+const Millis = Schema.Number.pipe(Schema.int());
+const Token = Schema.String.pipe(Schema.pattern(/^[a-f0-9]{64}$/));
+export const Space = Schema.Literal("full", "half_a", "half_b");
+export const Activity = Schema.Literal("practice", "game");
+export const Hours = Schema.Struct({ weekday: Schema.Number.pipe(Schema.int(), Schema.between(0, 6)), start: Schema.String, end: Schema.String });
+export const Gym = Schema.Struct({ name: Schema.String, timezone: Schema.String, split: Schema.Boolean, version: Id, hours: Schema.Array(Hours) });
+export const Season = Schema.Struct({ id: Id, name: Schema.String, start_date: Schema.String, end_date: Schema.String, status: Schema.Literal("draft", "active", "closed"), version: Id });
+export const Team = Schema.Struct({ id: Id, name: Schema.String, primary: Id, assistants: Schema.Array(Id), seasons: Schema.Array(Id), share_token: Schema.NullOr(Token), version: Id });
+export const Slot = Schema.Struct({ id: Id, season: Id, date: Schema.String, start: Schema.String, end: Schema.String, starts_at: Millis, ends_at: Millis, space: Space, enabled: Schema.Boolean, available: Schema.Boolean, version: Id });
+export const Booking = Schema.Struct({ id: Id, team: Id, slot: Id, series: Schema.NullOr(Token), activity: Activity, note: Schema.String, status: Schema.Literal("confirmed", "coach_cancelled", "organizer_cancelled", "closure_cancelled"), version: Id });
+export const Request = Schema.Struct({ id: Id, team: Id, slot: Id, series: Schema.NullOr(Token), activity: Activity, note: Schema.String, reason: Schema.String, status: Schema.Literal("pending", "approved", "declined", "conflict_cancelled", "withdrawn", "closure_cancelled", "invalidated"), replacement: Schema.NullOr(Id), version: Id });
+export const Swap = Schema.Struct({ id: Id, first: Id, second: Id, proposer: Id, deadline: Millis, status: Schema.Literal("pending", "accepted", "declined", "withdrawn", "expired", "invalidated"), version: Id });
+export const Closure = Schema.Struct({ id: Id, starts_at: Millis, ends_at: Millis, space: Space, reason: Schema.String, active: Schema.Boolean, version: Id });
+export const Schedule = Schema.Struct({ gym: Gym, seasons: Schema.Array(Season), teams: Schema.Array(Team), slots: Schema.Array(Slot), bookings: Schema.Array(Booking), requests: Schema.Array(Request), swaps: Schema.Array(Swap), closures: Schema.Array(Closure), now: Millis });
+export const Outcome = Schema.Struct({ resources: Schema.Array(Schema.Struct({ kind: Schema.String, id: Id })), warnings: Schema.Array(Schema.Literal("coach_overlap", "some_dates_unavailable")) });
+export const Preview = Schema.Struct({ occurrences: Schema.Array(Schema.Struct({ date: Schema.String, start: Schema.NullOr(Schema.String), end: Schema.NullOr(Schema.String), space: Schema.NullOr(Space), error: Schema.NullOr(Schema.Struct({ code: Schema.String, message: Schema.String, request_id: Schema.String, issues: Schema.Array(Schema.Struct({ field: Schema.String, message: Schema.String })) })) })), affected_bookings: Schema.Array(Id), affected_requests: Schema.Array(Id) });
+export const Notices = Schema.Array(Schema.Struct({ id: Token, user_id: Id, recipient: Schema.String, subject: Schema.String, text: Schema.String, created_at: Millis, read: Schema.Boolean, delivery: Schema.Literal("pending", "sending", "sent", "failed") }));
+export const Audit = Schema.Array(Schema.Struct({ actor: Id, action: Schema.String, occurred_at: Millis }));
+export const PublicCalendar = Schema.Struct({ team: Schema.String, gym: Schema.String, timezone: Schema.String, webpage_url: Schema.String, calendar_url: Schema.String, subscription_url: Schema.String, events: Schema.Array(Schema.Struct({ uid: Token, sequence: Schema.Number.pipe(Schema.int(), Schema.nonNegative()), starts_at: Millis, ends_at: Millis, activity: Activity, space: Space, cancelled: Schema.Boolean })) });
+export type Schedule = typeof Schedule.Type;
+export type Slot = typeof Slot.Type;
+export type Booking = typeof Booking.Type;
+export type Team = typeof Team.Type;
+export type Request = typeof Request.Type;
+export type Preview = typeof Preview.Type;
+export const spaceLabel = (space: typeof Space.Type) => ({ full: "Full gym", half_a: "Half A", half_b: "Half B" })[space];
+export const scopeLabel = { one: "This date", future: "This date and future dates", remaining: "All remaining dates" } as const;
+export const dateLabel = (date: string) => new Intl.DateTimeFormat("en", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`));
+export const instantLabel = (millis: number, timezone: string) => new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: timezone }).format(millis);
+export const shiftDate = (date: string, days: number): string => new Date(Date.parse(`${date}T12:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+export const monday = (date: string): string => shiftDate(date, -(new Date(`${date}T12:00:00Z`).getUTCDay() + 6) % 7);
+
+export const slotsConflict = (a: Slot, b: Slot): boolean => a.starts_at < b.ends_at && b.starts_at < a.ends_at && (a.space === "full" || b.space === "full" || a.space === b.space);
+export type RecurringSelection = {readonly slots:ReadonlyArray<number>;readonly excluded:ReadonlyArray<{readonly date:string;readonly reason:string}>};
+/** Select existing weekly slots and name every blocked or missing date instead of silently omitting it. */
+export const recurringSelection = (schedule:Schedule,anchor:Slot,lastDate:string):RecurringSelection => {
+ const season=schedule.seasons.find((v)=>v.id===anchor.season);
+ const end=season&&lastDate>season.end_date?season.end_date:lastDate;
+ const candidates:Array<string>=[];
+ for(let date=anchor.date;date<=end&&candidates.length<53;date=shiftDate(date,7))candidates.push(date);
+ const choices=candidates.map((date)=>({date,slot:schedule.slots.find((s)=>s.season===anchor.season&&s.date===date&&s.start===anchor.start&&s.end===anchor.end&&s.space===anchor.space)}));
+ return {slots:choices.flatMap(({slot})=>slot?.available?[slot.id]:[]),excluded:choices.filter(({slot})=>!slot?.available).map(({date,slot})=>({date,reason:slot?"This space and time are unavailable.":"The organizer has not published a matching slot."}))};
+};

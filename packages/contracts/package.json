@@ -1,0 +1,13 @@
+{
+  "name": "@gymtime/contracts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikezupper/gymtime.git"
+  }
+}

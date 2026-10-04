@@ -1,0 +1,290 @@
+@layer reset, tokens, base, layout, components, utilities;
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  body,
+  h1,
+  h2,
+  h3,
+  p {
+    margin: 0;
+  }
+  button,
+  input {
+    font: inherit;
+  }
+}
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+    --accent: light-dark(oklch(43% 0.13 255), oklch(79% 0.1 255));
+    --surface: light-dark(oklch(97.5% 0.004 255), oklch(18% 0.012 255));
+    --surface-raised: light-dark(oklch(100% 0 0), oklch(23% 0.012 255));
+    --text: light-dark(oklch(23% 0.018 255), oklch(94% 0.008 255));
+    --muted: color-mix(in oklch, var(--text) 76%, var(--surface));
+    --border: color-mix(in oklch, var(--text) 20%, var(--surface));
+    --accent-subtle: color-mix(
+      in oklab,
+      var(--accent) 9%,
+      var(--surface-raised)
+    );
+    --space: clamp(1.25rem, 4vw, 3rem);
+  }
+}
+@layer base {
+  body {
+    background: var(--surface);
+    color: var(--text);
+    font:
+      1rem/1.6 system-ui,
+      sans-serif;
+  }
+  h1,
+  h2,
+  h3 {
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  p,
+  li {
+    text-wrap: pretty;
+  }
+  a {
+    color: var(--accent);
+    text-underline-offset: 0.22em;
+  }
+  :focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--accent) 24%, var(--surface));
+  }
+}
+@layer layout {
+  .wrap {
+    max-inline-size: 76rem;
+    margin-inline: auto;
+    padding-inline: var(--space);
+  }
+  .site-header {
+    padding-block: 1.5rem;
+    border-block-end: 1px solid var(--border);
+  }
+  .site-header nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .hero {
+    padding-block: clamp(3rem, 8vw, 7rem);
+    display: grid;
+    gap: 3rem;
+    align-items: center;
+  }
+  .hero h1 {
+    font-size: clamp(3rem, 7vw, 6.4rem);
+    letter-spacing: -0.055em;
+    max-inline-size: 11ch;
+  }
+  .hero p {
+    max-inline-size: 48ch;
+    margin-block-start: 1.5rem;
+    color: var(--muted);
+    font-size: 1.15rem;
+  }
+  .hero .actions {
+    margin-block-start: 2rem;
+  }
+  .features {
+    padding-block: 3rem 5rem;
+    border-block-start: 1px solid var(--border);
+  }
+  .features h2 {
+    font-size: clamp(1.75rem, 4vw, 2.8rem);
+    letter-spacing: -0.035em;
+  }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
+    gap: 2rem;
+    margin-block-start: 2.5rem;
+  }
+  .feature-grid h3 {
+    font-size: 1.2rem;
+    margin-block-end: 1rem;
+  }
+  .feature-grid p {
+    color: var(--muted);
+    max-inline-size: 36ch;
+  }
+  footer {
+    padding-block: 2rem;
+    border-block-start: 1px solid var(--border);
+    color: var(--muted);
+  }
+  @media (min-width: 55rem) {
+    .hero {
+      grid-template-columns: 1.1fr 1fr;
+    }
+  }
+}
+@layer components {
+  .wordmark {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 1.65rem;
+    font-weight: 800;
+    letter-spacing: -0.055em;
+  }
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: 48px;
+    padding-inline: 1.4rem;
+    border-radius: 0.6rem;
+    background: var(--accent);
+    color: var(--surface);
+    text-decoration: none;
+    font-weight: 650;
+  }
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 650;
+    letter-spacing: 0.05em;
+    margin-block-end: 1rem;
+  }
+  .court-frame {
+    padding: 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--surface-raised);
+    container-type: inline-size;
+  }
+  .court-frame figcaption {
+    margin-block-start: 1.25rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .court {
+    border: 2px solid var(--accent);
+    border-radius: 0.35rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-block-size: 17rem;
+    position: relative;
+  }
+  .court::before {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    translate: -50% -50%;
+    inline-size: 5rem;
+    aspect-ratio: 1;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+  }
+  .court span {
+    display: grid;
+    place-content: center;
+    color: var(--accent);
+    font-size: 1.2rem;
+    font-weight: 650;
+  }
+  .court span + span {
+    border-inline-start: 2px solid var(--accent);
+  }
+  @container (max-width: 22rem) {
+    .court {
+      min-block-size: 13rem;
+    }
+    .court span {
+      font-size: 1rem;
+    }
+  }
+  .skip {
+    position: absolute;
+    inset-block-start: -10rem;
+  }
+  .skip:focus {
+    inset-block-start: 0;
+    padding: 1rem;
+    background: var(--surface-raised);
+    z-index: 2;
+  }
+}
+@media (forced-colors: active) {
+  .button {
+    border: 1px solid ButtonText;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .button {
+    transition: opacity 150ms ease-out;
+  }
+  .button:hover {
+    opacity: 0.88;
+  }
+}
+
+@layer components {
+  gymtime-app {
+    display: block;
+  }
+  gymtime-app header {
+    padding-block: 0.4rem;
+    background: var(--surface-raised);
+    border-block-end: 1px solid var(--border);
+  }
+  gymtime-app nav,
+  gymtime-app main {
+    max-inline-size: 90rem;
+    margin-inline: auto;
+    padding-inline: clamp(0.75rem, 2.5vw, 2rem);
+  }
+  gymtime-app nav {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+  gymtime-app header a {
+    text-decoration: none;
+  }
+  gymtime-app a {
+    color: var(--text);
+    min-block-size: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  gymtime-app strong {
+    letter-spacing: -0.04em;
+    font-size: 1.5rem;
+  }
+  gymtime-app main {
+    padding-block: 0.5rem 2rem;
+  }
+  gymtime-app .skip {
+    position: absolute;
+    inset-block-start: -10rem;
+  }
+  gymtime-app .skip:focus {
+    inset-block-start: 0;
+    background: var(--surface-raised);
+    padding: 1rem;
+  }
+  gymtime-app :focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+}
+
+@media (max-width: 45rem) {
+  gymtime-app:has(gymtime-account) header nav > a:last-child {
+    display: none;
+  }
+}

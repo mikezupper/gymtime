@@ -1,0 +1,39 @@
+services:
+  app:
+    image: gymtime:dev
+    platform: linux/amd64
+    build:
+      context: .
+      target: app
+      args:
+        PUBLIC_SITE_URL: http://localhost:${DEV_API_PORT:-3017}
+    init: true
+    stop_grace_period: 15s
+    ports:
+      - 127.0.0.1:${DEV_API_PORT:-3017}:3000
+    environment:
+      APP_ENV: development
+      APP_PORT: "3000"
+      APP_BIND_ADDRESS: 0.0.0.0
+      APP_PUBLIC_URL: http://localhost:${DEV_API_PORT:-3017}
+      INITIAL_ORGANIZER_EMAIL: organizer@example.test
+      RESEND_BASE_URL: http://email:8027
+      RESEND_API_KEY: local-test-key
+      EMAIL_FROM: gymtime@example.test
+    volumes:
+      - gymtime-dev-data:/data
+    depends_on:
+      email:
+        condition: service_started
+  email:
+    build:
+      context: .
+      target: email-sandbox
+    init: true
+    ports:
+      - 127.0.0.1:${DEV_EMAIL_PORT:-8027}:8027
+    environment:
+      DEV_EMAIL_PORT: "8027"
+      EMAIL_SANDBOX_HOST: 0.0.0.0
+volumes:
+  gymtime-dev-data:

@@ -1,0 +1,34 @@
+[package]
+name = "gymtime-infra"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+gymtime-domain.workspace = true
+gymtime-app.workspace = true
+sqlx.workspace = true
+async-trait.workspace = true
+resend-rs.workspace = true
+reqwest.workspace = true
+url.workspace = true
+secrecy.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+hmac.workspace = true
+sha2.workspace = true
+getrandom.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+tempfile.workspace = true
+axum.workspace = true
+serde_json.workspace = true

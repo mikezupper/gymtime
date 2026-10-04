@@ -1,0 +1,9 @@
+disallowed-methods = [
+  { path = "std::time::SystemTime::now", reason = "inject time" },
+  { path = "chrono::Utc::now", reason = "inject time; pure calendar types have no clock feature", allow-invalid = true },
+  { path = "chrono::Local::now", reason = "inject time; use configured gym timezone", allow-invalid = true },
+  { path = "rand::random", reason = "inject random values" },
+  { path = "uuid::Uuid::new_v4", reason = "inject identifiers" },
+  { path = "futures::future::join_all", reason = "bound concurrency" },
+  { path = "tokio::sync::mpsc::unbounded_channel", reason = "use bounded queues" },
+]

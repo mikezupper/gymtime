@@ -1,0 +1,43 @@
+services:
+  app:
+    image: gymtime:local
+    platform: linux/amd64
+    build:
+      context: .
+      target: app
+      args:
+        PUBLIC_SITE_URL: ${APP_PUBLIC_URL:?Set APP_PUBLIC_URL}
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    environment:
+      APP_ENV: production
+      APP_PORT: ${APP_PORT:-3000}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:?Set APP_PUBLIC_URL}
+      APP_HOST: ${APP_HOST:?Set APP_HOST}
+      DATABASE_URL: sqlite:///data/gymtime.db
+      INITIAL_ORGANIZER_EMAIL: ${INITIAL_ORGANIZER_EMAIL:?Set INITIAL_ORGANIZER_EMAIL}
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
+      RESEND_BASE_URL: ${RESEND_BASE_URL:?Set RESEND_BASE_URL}
+      RESEND_API_KEY: ${RESEND_API_KEY:?Set RESEND_API_KEY}
+      EMAIL_FROM: ${EMAIL_FROM:?Set EMAIL_FROM}
+      TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:?Set TRUSTED_PROXY_CIDRS}
+    volumes:
+      - gymtime-data:/data
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:?Set TRAEFIK_NETWORK}
+      - traefik.http.routers.gymtime.rule=Host(`${APP_HOST:?Set APP_HOST}`)
+      - traefik.http.routers.gymtime.entrypoints=${TRAEFIK_ENTRYPOINT:?Set TRAEFIK_ENTRYPOINT}
+      - traefik.http.routers.gymtime.tls=true
+      - traefik.http.routers.gymtime.tls.certresolver=${TRAEFIK_CERT_RESOLVER:?Set TRAEFIK_CERT_RESOLVER}
+      - traefik.http.routers.gymtime.service=gymtime
+      - traefik.http.services.gymtime.loadbalancer.server.port=${APP_PORT:-3000}
+volumes:
+  gymtime-data:
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:?Set TRAEFIK_NETWORK}

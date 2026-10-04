@@ -1,0 +1,36 @@
+.DS_Store
+node_modules/
+dist/
+archive/
+.env
+.env.*
+!.env.example
+target/
+.local/
+test-results/
+playwright-report/
+.agents/skills/.update.lock/
+.agents/skills/.update-*/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/
+
+# Local execution state and private guidance never belong in the public tree.
+.beads/
+.agents/skills/sense-of-style/
+.vitest-attachments/
+tests/browser/__screenshots__/
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.pem
+*.key
+*.p12
+*.pfx
+.envrc
+.envrc.*

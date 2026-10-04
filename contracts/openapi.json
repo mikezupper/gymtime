@@ -1,0 +1,2265 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Gymtime API",
+    "description": "Gymtime health and invitation-only sign-in workflows.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/accounts": {
+      "get": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "# Errors\nReturns safe authentication, organizer permission, or storage errors.",
+        "operationId": "list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccountResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "# Errors\nReturns safe authentication, input, organizer permission, or storage errors.",
+        "operationId": "invite",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{id}": {
+      "patch": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "# Errors\nReturns safe authentication, input, last-organizer, permission, or storage errors.",
+        "operationId": "status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {},
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audit": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "# Errors\nRequires current organizer permissions to read safe audit summaries.",
+        "operationId": "audit",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "# Errors\nReturns safe session, CSRF, or infrastructure errors.",
+        "operationId": "logout",
+        "responses": {
+          "204": {}
+        }
+      }
+    },
+    "/api/v1/auth/request-code": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "# Errors\nReturns safe input, origin, rate limit, or infrastructure errors.",
+        "operationId": "request_code",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestCodeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/session": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "# Errors\nReturns safe session or infrastructure errors.",
+        "operationId": "session",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-code": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "# Errors\nReturns safe input, origin, code, or infrastructure errors.",
+        "operationId": "verify_code",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyCodeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "# Errors\nReturns authentication or safe query/persistence errors. Only organizers can read failed deliveries for others.",
+        "operationId": "inbox",
+        "parameters": [
+          {
+            "name": "failed_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NoticeView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/teams/{token}": {
+      "get": {
+        "tags": [
+          "public calendars"
+        ],
+        "summary": "# Errors\nReturns NotFound for invalid/rotated links, or safe storage errors. No internal fields are projected.",
+        "operationId": "readPublicCalendar",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCalendarView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedule": {
+      "get": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "# Errors\nReturns authentication, storage, or safe decoding errors.",
+        "operationId": "readSchedule",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedule/actions": {
+      "post": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "# Errors\nRequires current permissions, CSRF, an idempotency key and validated action data.",
+        "operationId": "mutate",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "64 lowercase hex characters; reuse only for the same action",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeView"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedule/preview": {
+      "post": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "# Errors\nRequires organizer permissions; validates template/closure data without saving it.",
+        "operationId": "preview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendars/{token}.ics": {
+      "get": {
+        "tags": [
+          "public calendars"
+        ],
+        "summary": "# Errors\nReturns NotFound for invalid/rotated links, or safe calendar/storage errors.",
+        "operationId": "feed",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/calendar": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "operationId": "live",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "operationId": "ready",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccountResponse": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "email",
+          "organizer",
+          "enabled"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "organizer": {
+            "type": "boolean"
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ActionBody": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "mark_notice_read"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "retry_email"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "name",
+              "timezone",
+              "split",
+              "hours",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "hours": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/HoursBody"
+                }
+              },
+              "name": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure_gym"
+                ]
+              },
+              "split": {
+                "type": "boolean"
+              },
+              "timezone": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "name",
+              "start_date",
+              "end_date",
+              "operation"
+            ],
+            "properties": {
+              "end_date": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "create_season"
+                ]
+              },
+              "start_date": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "start_date",
+              "end_date",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "end_date": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "name": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "edit_season"
+                ]
+              },
+              "start_date": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "status",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "set_season_status"
+                ]
+              },
+              "status": {
+                "$ref": "#/components/schemas/SeasonState"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "name",
+              "primary",
+              "season",
+              "operation"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "create_team"
+                ]
+              },
+              "primary": {
+                "type": "string"
+              },
+              "season": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "primary",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "name": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "edit_team"
+                ]
+              },
+              "primary": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "team",
+              "email",
+              "remove",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "assign_assistant"
+                ]
+              },
+              "remove": {
+                "type": "boolean"
+              },
+              "team": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "team",
+              "season",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "assign_team_season"
+                ]
+              },
+              "season": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "team": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "team",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "rotate_team_link"
+                ]
+              },
+              "team": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "season",
+              "start_date",
+              "end_date",
+              "weekdays",
+              "start",
+              "end",
+              "space",
+              "operation"
+            ],
+            "properties": {
+              "end": {
+                "type": "string"
+              },
+              "end_date": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "create_slots"
+                ]
+              },
+              "season": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "space": {
+                "$ref": "#/components/schemas/SpaceBody"
+              },
+              "start": {
+                "type": "string"
+              },
+              "start_date": {
+                "type": "string"
+              },
+              "weekdays": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "date",
+              "start",
+              "end",
+              "space",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "date": {
+                "type": "string"
+              },
+              "end": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "edit_slot"
+                ]
+              },
+              "space": {
+                "$ref": "#/components/schemas/SpaceBody"
+              },
+              "start": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "enabled",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "set_slot_enabled"
+                ]
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "start_date",
+              "end_date",
+              "start",
+              "end",
+              "space",
+              "reason",
+              "operation"
+            ],
+            "properties": {
+              "end": {
+                "type": "string"
+              },
+              "end_date": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "close_gym"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "space": {
+                "$ref": "#/components/schemas/SpaceBody"
+              },
+              "start": {
+                "type": "string"
+              },
+              "start_date": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "reopen_gym"
+                ]
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "team",
+              "slots",
+              "activity",
+              "note",
+              "reason",
+              "operation"
+            ],
+            "properties": {
+              "activity": {
+                "$ref": "#/components/schemas/ActivityBody"
+              },
+              "note": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "submit_requests"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "slots": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "team": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "slot",
+              "activity",
+              "note",
+              "reason",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "activity": {
+                "$ref": "#/components/schemas/ActivityBody"
+              },
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "note": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "edit_request"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "slot": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "ids",
+              "operation"
+            ],
+            "properties": {
+              "ids": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "withdraw_requests"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "decisions",
+              "operation"
+            ],
+            "properties": {
+              "decisions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DecisionBody"
+                }
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "decide_requests"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "team",
+              "slots",
+              "activity",
+              "note",
+              "operation"
+            ],
+            "properties": {
+              "activity": {
+                "$ref": "#/components/schemas/ActivityBody"
+              },
+              "note": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "book_directly"
+                ]
+              },
+              "slots": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "team": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "scope",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "cancel_booking"
+                ]
+              },
+              "scope": {
+                "$ref": "#/components/schemas/ScopeBody"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "scope",
+              "slots",
+              "activity",
+              "note",
+              "reason",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "activity": {
+                "$ref": "#/components/schemas/ActivityBody"
+              },
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "note": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "change_booking"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "scope": {
+                "$ref": "#/components/schemas/ScopeBody"
+              },
+              "slots": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "slot",
+              "activity",
+              "note",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "activity": {
+                "$ref": "#/components/schemas/ActivityBody"
+              },
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "note": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "move_booking"
+                ]
+              },
+              "slot": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "first",
+              "second",
+              "first_version",
+              "second_version",
+              "operation"
+            ],
+            "properties": {
+              "first": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "first_version": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "propose_swap"
+                ]
+              },
+              "second": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "second_version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "accept",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "accept": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "respond_swap"
+                ]
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "version",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "withdraw_swap"
+                ]
+              },
+              "version": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          }
+        ]
+      },
+      "ActivityBody": {
+        "type": "string",
+        "enum": [
+          "practice",
+          "game"
+        ]
+      },
+      "AuditView": {
+        "type": "object",
+        "required": [
+          "actor",
+          "action",
+          "occurred_at"
+        ],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "occurred_at": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "BookingView": {
+        "type": "object",
+        "required": [
+          "id",
+          "team",
+          "slot",
+          "activity",
+          "note",
+          "status",
+          "version"
+        ],
+        "properties": {
+          "activity": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "note": {
+            "type": "string"
+          },
+          "series": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slot": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          },
+          "team": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ClosureView": {
+        "type": "object",
+        "required": [
+          "id",
+          "starts_at",
+          "ends_at",
+          "space",
+          "reason",
+          "active",
+          "version"
+        ],
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "ends_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "space": {
+            "type": "string"
+          },
+          "starts_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "CodeResponse": {
+        "type": "object",
+        "required": [
+          "message",
+          "resend_after_seconds"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "resend_after_seconds": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "DecisionBody": {
+        "type": "object",
+        "required": [
+          "id",
+          "approve",
+          "version"
+        ],
+        "properties": {
+          "approve": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "request_id",
+          "issues"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldIssue"
+            }
+          },
+          "message": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "FieldIssue": {
+        "type": "object",
+        "required": [
+          "field",
+          "message"
+        ],
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "GymView": {
+        "type": "object",
+        "required": [
+          "name",
+          "timezone",
+          "split",
+          "version",
+          "hours"
+        ],
+        "properties": {
+          "hours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HoursBody"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "split": {
+            "type": "boolean"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/HealthStatus"
+          }
+        }
+      },
+      "HealthStatus": {
+        "type": "string",
+        "enum": [
+          "alive",
+          "ready"
+        ]
+      },
+      "HoursBody": {
+        "type": "object",
+        "required": [
+          "weekday",
+          "start",
+          "end"
+        ],
+        "properties": {
+          "end": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string"
+          },
+          "weekday": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "InvitationRole": {
+        "type": "string",
+        "enum": [
+          "organizer",
+          "coach"
+        ]
+      },
+      "InviteBody": {
+        "type": "object",
+        "required": [
+          "email",
+          "role"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/InvitationRole"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NoticeView": {
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "recipient",
+          "subject",
+          "text",
+          "created_at",
+          "read",
+          "delivery"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "delivery": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "OutcomeView": {
+        "type": "object",
+        "required": [
+          "resources",
+          "warnings"
+        ],
+        "properties": {
+          "resources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceView"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PreviewItem": {
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "end": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "space": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "start": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PreviewView": {
+        "type": "object",
+        "required": [
+          "occurrences",
+          "affected_bookings",
+          "affected_requests"
+        ],
+        "properties": {
+          "affected_bookings": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "affected_requests": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "occurrences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewItem"
+            }
+          }
+        }
+      },
+      "PublicCalendarView": {
+        "type": "object",
+        "required": [
+          "team",
+          "gym",
+          "timezone",
+          "webpage_url",
+          "calendar_url",
+          "subscription_url",
+          "events"
+        ],
+        "properties": {
+          "calendar_url": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicEventView"
+            }
+          },
+          "gym": {
+            "type": "string"
+          },
+          "subscription_url": {
+            "type": "string"
+          },
+          "team": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "webpage_url": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicEventView": {
+        "type": "object",
+        "required": [
+          "uid",
+          "sequence",
+          "starts_at",
+          "ends_at",
+          "activity",
+          "space",
+          "cancelled"
+        ],
+        "properties": {
+          "activity": {
+            "type": "string"
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "ends_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sequence": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "space": {
+            "type": "string"
+          },
+          "starts_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "uid": {
+            "type": "string"
+          }
+        }
+      },
+      "RequestCodeBody": {
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestView": {
+        "type": "object",
+        "required": [
+          "id",
+          "team",
+          "slot",
+          "activity",
+          "note",
+          "reason",
+          "status",
+          "version"
+        ],
+        "properties": {
+          "activity": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "note": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "replacement": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "series": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slot": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          },
+          "team": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ResourceView": {
+        "type": "object",
+        "required": [
+          "kind",
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "kind": {
+            "type": "string"
+          }
+        }
+      },
+      "ScheduleView": {
+        "type": "object",
+        "required": [
+          "gym",
+          "seasons",
+          "teams",
+          "slots",
+          "bookings",
+          "requests",
+          "swaps",
+          "closures",
+          "now"
+        ],
+        "properties": {
+          "bookings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingView"
+            }
+          },
+          "closures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClosureView"
+            }
+          },
+          "gym": {
+            "$ref": "#/components/schemas/GymView"
+          },
+          "now": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestView"
+            }
+          },
+          "seasons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeasonView"
+            }
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SlotView"
+            }
+          },
+          "swaps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SwapView"
+            }
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamView"
+            }
+          }
+        }
+      },
+      "ScopeBody": {
+        "type": "string",
+        "enum": [
+          "one",
+          "future",
+          "remaining"
+        ]
+      },
+      "SeasonState": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "active",
+          "closed"
+        ]
+      },
+      "SeasonView": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "start_date",
+          "end_date",
+          "status",
+          "version"
+        ],
+        "properties": {
+          "end_date": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "SessionResponse": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "email",
+          "organizer",
+          "csrf_token"
+        ],
+        "properties": {
+          "csrf_token": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "organizer": {
+            "type": "boolean"
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "SlotView": {
+        "type": "object",
+        "required": [
+          "id",
+          "season",
+          "date",
+          "start",
+          "end",
+          "starts_at",
+          "ends_at",
+          "space",
+          "enabled",
+          "available",
+          "version"
+        ],
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "date": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "end": {
+            "type": "string"
+          },
+          "ends_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "season": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "space": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string"
+          },
+          "starts_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "SpaceBody": {
+        "type": "string",
+        "enum": [
+          "full",
+          "half_a",
+          "half_b"
+        ]
+      },
+      "StatusBody": {
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SwapView": {
+        "type": "object",
+        "required": [
+          "id",
+          "first",
+          "second",
+          "proposer",
+          "deadline",
+          "status",
+          "version"
+        ],
+        "properties": {
+          "deadline": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "proposer": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "second": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "TeamView": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "primary",
+          "assistants",
+          "seasons",
+          "version"
+        ],
+        "properties": {
+          "assistants": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "primary": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "seasons": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "share_token": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "VerifyCodeBody": {
+        "type": "object",
+        "required": [
+          "email",
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

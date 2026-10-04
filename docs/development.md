@@ -49,7 +49,7 @@ After changing API DTOs, run `pnpm contract:generate`. After changing migrations
 After installing the check tools and browser engines, run:
 
 ```bash
-pnpm ci
+pnpm run ci
 ```
 
 This command runs source and documentation checks, unit and Rust tests, Chromium and WebKit component and full-stack tests, the native build, and the Linux x86_64 production container build. Docker must be available. It stops at the first failure and returns a nonzero exit code. It builds `gymtime:verification` with a fictional public origin; it does not publish an image or deploy the app. End-to-end services use disposable local state and stop when their suite finishes.

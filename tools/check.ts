@@ -56,7 +56,7 @@ export const docs = Effect.gen(function* () {
   }
   const packageJson = yield* read("package.json").pipe(Effect.flatMap(Schema.decodeUnknown(Schema.parseJson(Schema.Struct({ scripts: Schema.Record({ key: Schema.String, value: Schema.String }) })))));
   const specification = yield* read("docs/scaffold.md");
-  for (const match of specification.matchAll(/`pnpm ([a-z]+:[a-z]+|dev|check|build)`/g)) {
+  for (const match of specification.matchAll(/`pnpm (?:run )?([a-z]+:[a-z]+|ci|dev|check|build)`/g)) {
     yield* assert((match.at(1) ?? "") in packageJson.scripts, `Undeclared command: ${match.at(1)}`);
   }
   const configSources = (yield* Effect.forEach(["compose.yaml", "compose.dev.yaml", "crates/server/src/config.rs", "tools/dev.ts"], read, { concurrency: 2 })).join("\n");

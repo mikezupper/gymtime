@@ -91,7 +91,7 @@ The core tooling below is selected by the owner. Supporting defaults are specifi
 | Rendering | Client rendering for interactive routes; build-time rendering for the landing page | Specified in architecture | Fit the Lit skill's rendering modes while keeping the production business service in Rust |
 | Local services | Separate local Compose setup with the application, SQLite, and a compatible test email API | Specified in scaffold | Exercise the production database and inspect email without contacting coaches |
 | Background delivery | A durable SQLite outbox processed by a background task in the Rust application | Specified in architecture | Commit schedule changes independently of email endpoint availability and retry delivery safely |
-| Verification | `pnpm ci` on a contributor's machine; GitHub Actions disabled | Selected by owner | Run the full checks, tests, and builds locally without hosted jobs |
+| Verification | `pnpm run ci` on a contributor's machine; GitHub Actions disabled | Selected by owner | Run the full checks, tests, and builds locally without hosted jobs |
 | UI verification | Vitest in real browsers through Playwright, with keyboard and accessibility checks | Selected | Exercise custom elements and actual browser behavior |
 | Backend verification | Unit and property tests for pure decisions; integration and concurrency tests with SQLite | Selected | Verify conflicts, permissions, swap validity, and transaction behavior using the production database |
 

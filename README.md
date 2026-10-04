@@ -97,11 +97,11 @@ pnpm test:e2e
 pnpm build
 ```
 
-With Docker available, `pnpm ci` runs all five commands above and builds the production container. Verification runs on your machine. GitHub Actions and automatic dependency-update PRs are disabled; contributors report their local results with each PR.
+With Docker available, `pnpm run ci` runs all five commands above and builds the production container. Verification runs on your machine. GitHub Actions and automatic dependency-update PRs are disabled; contributors report their local results with each PR.
 
 | Command | Result |
 | --- | --- |
-| `pnpm ci` | Full local verification, native build, and production container build; requires Docker |
+| `pnpm run ci` | Full local verification, native build, and production container build; requires Docker |
 | `pnpm check` | TypeScript, ESLint, strict Lit templates, Rust formatting/Clippy, dependency policy, architecture, contracts, migrations, docs, and public skill hashes |
 | `pnpm test:unit` | Vitest, Rust nextest, and Rust doctests |
 | `pnpm test:browser` | Real custom-element tests in Chromium and WebKit |

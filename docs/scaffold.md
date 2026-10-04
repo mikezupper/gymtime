@@ -73,7 +73,7 @@ The Lit skill selects Vitest 4. Effect 3's [`@effect/vitest` 0.30.0 metadata](ht
 
 The selected [Resend SDK documentation](https://docs.rs/resend-rs/0.32.3/resend_rs/index.html) describes the required `RESEND_API_KEY` and `RESEND_BASE_URL` behavior. A newer SDK can be adopted when adapter tests demonstrate the same custom-endpoint behavior; it is not required merely because the registry lists it.
 
-Commit application lockfiles, the exact package manager and compiler selections, and the final tested version table. Container builds use those locks and frozen installs. Resolve and record base-image digests when creating the Dockerfile. Run verification locally through `pnpm ci`; GitHub Actions and automatic dependency-update PR creation are disabled. Do not use `latest` as a reproducibility policy.
+Commit application lockfiles, the exact package manager and compiler selections, and the final tested version table. Container builds use those locks and frozen installs. Resolve and record base-image digests when creating the Dockerfile. Run verification locally through `pnpm run ci`; GitHub Actions and automatic dependency-update PR creation are disabled. Do not use `latest` as a reproducibility policy.
 
 ## Development commands
 
@@ -81,7 +81,7 @@ These root commands are the scaffold interface.
 
 | Command | Expected behavior |
 | --- | --- |
-| `pnpm ci` | Run the full local checks, tests, native build, and production container build; stop on failure |
+| `pnpm run ci` | Run the full local checks, tests, native build, and production container build; stop on failure |
 | `pnpm dev` | Start Vite and Rust with coordinated shutdown and a same-origin API proxy |
 | `pnpm dev:api` | Start just the Rust service with local configuration |
 | `pnpm check` | Type, template, lint, formatting, Rust lint, architecture, contract, and documentation checks |

@@ -14,15 +14,10 @@
     "noFallthroughCasesInSwitch": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "experimentalDecorators": true,
-    "useDefineForClassFields": false,
+    "useDefineForClassFields": true,
     "plugins": [
       {
         "name": "@effect/language-service"
-      },
-      {
-        "name": "ts-lit-plugin",
-        "strict": true
       }
     ]
   },
@@ -31,6 +26,7 @@
     "apps/web/**/*.ts",
     "packages/**/*.ts",
     "tests/**/*.ts",
-    "*.ts"
+    "*.ts",
+    "apps/web/.gyral/elements.d.ts"
   ]
 }

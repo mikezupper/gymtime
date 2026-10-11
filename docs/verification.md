@@ -1,5 +1,69 @@
 # Verification
 
+## Gyral frontend rewrite — October 10, 2026
+
+The owner approved the [frontend rewrite](gyral-rewrite.md) with the existing Rust API and SQLite database. All thirteen components now use Gyral `0.3.1-next.9`; the landing page uses Gyral SSR at build time. Lit, its controllers, context/task/signal packages, decorators, analyzer, lint plugins, and SSR dependency are removed. The planner has separate model, intent, and view modules. Rust code, migrations, and API contracts did not change.
+
+The final `pnpm run ci` passed:
+
+| Check | Result |
+| --- | --- |
+| Static and policy checks | TypeScript, generated Gyral element types, Gyral ESLint rules, Rust formatting/Clippy, dependency policy, architecture, contract/schema drift, local document links, and pinned skill hashes passed |
+| TypeScript model and service tests | 17 passed, including a seeded 100-run selection property test, draft preservation, stale read/failure isolation, duplicate-write suppression, and mutation-key reuse after a failed reload |
+| Rust tests | 43 nextest tests passed; the doctest command passed with no doctests present |
+| Browser components | 20 Chromium/WebKit cases passed, including initial coach filtering, canonical outputs, combined field errors, correction, and subscription cleanup |
+| Full-stack workflows | 16 Chromium/WebKit cases passed against fresh SQLite and the local email sandbox |
+| Native and container builds | Frontend template compilation, landing generation, Rust native build, and the complete Linux amd64 production image passed |
+
+A frozen install passed. Core, SSR, and testing resolve to the same vendored core release through the workspace override; Docker installs from repository archives without the sibling release directory. The standalone web typecheck generates its declarations before checking. Native verification used Node 24.15.0 and pnpm 12.8.2; the container used the exact Node 24.21.0 pin.
+
+The built image ran as UID 10001 with temporary SQLite storage. Its readiness endpoint, generated landing content/canonical metadata, search exclusion, and built sign-in client passed a startup probe with no browser console errors. The temporary container was stopped after the probe.
+
+An ignored calendar preview passed Chromium/WebKit checks at 800, 1024, 1280, and 1440 pixels, with no ordinary booking-card overflow. At 390 pixels the agenda remained visible without page overflow. The one-hour scale remains 112 pixels at default text size, and a 16:07 booking aligned within 0.01 pixels of its expected minute offset. Light theme and 200% text enlargement produced no page/card overflow or console errors. Desktop and mobile screenshots were inspected. The populated local development data was preserved, and the existing dev server remained ready.
+
+The Effect self-review found no application `async/await`, throwing control flow, console calls, untyped values, or extra runtime boundary. Browser lifecycle hooks own DOM listeners and error IDs; reducer state remains immutable. Transport DTO nulls/numeric IDs and framework optional values retain the documented boundary interpretations. This verification covers the frontend migration; it does not establish production deployment, live email delivery, real calendar-provider refresh, Firefox behavior, load-test results, or a user usability study. No Git publication or deployment was performed.
+
+## Calendar height — October 10, 2026
+
+Week and Day calendar views now use `7rem` per hour and one shared scale for
+labels, minute rows, and grid lines. The weekly grid keeps a `60rem` minimum
+width for readable half-gym cards. An ignored calendar-only preview from local
+test data had no booking-content overflow at 800, 1024, 1280, and 1440 pixels in
+Chromium and WebKit, including the earlier-hours view. Both browsers retained
+the agenda without page-width overflow at 390 pixels. A one-hour booking
+starting at 16:07 aligned within 0.01 pixels of its expected minute offset.
+Desktop and mobile screenshots were inspected locally. The eighteen existing
+browser component cases and frontend production build passed. `pnpm check`
+passed; these layout checks do not constitute a new full-stack or Docker run.
+
+## Gyral rewrite review and release preparation — October 10, 2026
+
+The [rewrite review](gyral-rewrite.md) compared Gymtime's accepted behavior and
+implementation with the two owner-supplied reference sites. At that review stage, the application remained Lit and Rust; the following evidence covers package preparation before the approved frontend migration.
+
+`pnpm check` passed after adding vendored-release verification and vendor document
+links. The existing application passed twelve TypeScript unit tests, 43 Rust
+nextest tests, eighteen Chromium/WebKit component cases, and sixteen full-stack
+browser cases. The Rust doctest command passed with no doctests present. The
+native host used Node 24.15.0 and pnpm 12.8.2; its Node version differs from the
+repository's exact 24.21.0 development pin.
+
+All nine `0.3.1-next.9` archives and `SOURCE.json` matched the unchanged release
+checksums from clean Gyral commit
+`78052c439d697e5d2075bd6a40c6ea8cc257cd6c`. An ignored, isolated package probe
+installed core, SSR, router, HTTP, time, testing, and devtools through local file
+dependencies and workspace overrides, then passed a frozen reinstall. Its
+resolved dependency paths contained one core package. A core/SSR smoke rendered
+a readable HTML page with status 200. This proves basic package installation and
+server rendering, rather than Gymtime component compatibility.
+
+The modified Docker `web` stage built for Linux amd64 with its pinned Node
+24.21.0 image. It copied and verified the release before the existing frozen
+install, then built the current Lit assets and landing page. The final production
+runtime image and full `pnpm run ci` command were not rebuilt in this review.
+No image was pushed, app deployed, live email sent, or real calendar client
+tested. The owner subsequently approved retaining Rust and SQLite for the frontend rewrite.
+
 ## Local verification and dependency review — October 4, 2026
 
 `pnpm run ci` passed locally with Resend 0.33.0, ipnet 2.12.2, Tower HTTP 0.7.1, and getrandom 0.4.3. It ran source and documentation checks, twelve Vitest tests, 43 Rust tests, eighteen browser-component cases, sixteen full-stack browser cases, the native build, and the production container build. After merging the four updates, the committed Cargo manifest and lockfile matched the tested files byte for byte.

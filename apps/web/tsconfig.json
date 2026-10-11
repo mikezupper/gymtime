@@ -3,6 +3,7 @@
   "include": [
     "src/**/*.ts",
     "scripts/**/*.ts",
-    "vite.config.ts"
+    "vite.config.ts",
+    ".gyral/elements.d.ts"
   ]
 }

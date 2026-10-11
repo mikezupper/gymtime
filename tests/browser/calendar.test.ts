@@ -1,3 +1,4 @@
+import { settled } from "@gyral/core";
 import { afterEach, expect, it } from "vitest";
 import "../../apps/web/src/components/gymtime-calendar.js";
 import type { Schedule, Slot } from "../../apps/web/src/domain/schedule.js";
@@ -75,7 +76,7 @@ it("shows actual half-gym occupancy once, with compatible availability and no ca
   host.day = slot.date;
   host.canSelect = true;
   document.body.append(host);
-  await host.updateComplete;
+  await settled();
   const events = host.shadowRoot?.querySelectorAll(".event.booked");
   expect(events).toHaveLength(1);
   expect(events?.[0]?.textContent).toContain("Half A");
@@ -86,11 +87,12 @@ it("shows actual half-gym occupancy once, with compatible availability and no ca
   );
   expect(host.shadowRoot?.querySelector(".event.closed")).toBeNull();
   let selected = 0;
-  host.addEventListener("booking-open", (event) => {
-    if (event instanceof CustomEvent && typeof event.detail === "number")
-      selected = event.detail;
+  host.addEventListener("gyral-output", (event) => {
+    if (event instanceof CustomEvent && event.detail?._tag === "Booking")
+      selected = event.detail.id;
   });
   host.shadowRoot?.querySelector<HTMLButtonElement>(".event.booked")?.click();
+  await settled();
   expect(selected).toBe(1);
 });
 it("assistant calendars keep availability inspectable without offering mutation actions", async () => {
@@ -101,7 +103,7 @@ it("assistant calendars keep availability inspectable without offering mutation 
   host.day = slot.date;
   host.canSelect = false;
   document.body.append(host);
-  await host.updateComplete;
+  await settled();
   expect(
     host.shadowRoot?.querySelector<HTMLButtonElement>(".event.free")?.disabled,
   ).toBe(true);

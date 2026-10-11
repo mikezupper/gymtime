@@ -1,35 +1,43 @@
-import { consume } from "@lit/context";
-import { Task, TaskStatus } from "@lit/task";
+import { command, css, define, html, nothing } from "@gyral/core";
 import { Either } from "effect";
-import { LitElement, html, css } from "lit";
-import { customElement, property } from "lit/decorators.js";
-import { ApiFailure } from "../domain/api.js";
-import type { AppAdapter } from "../runtime/adapter.js";
-import { adapterContext } from "../state/context.js";
-import "./gymtime-planner.js";
+import { ApiFailure, type Session } from "../domain/api.js";
+import { authDriver, navigate, type Result } from "../runtime/commands.js";
 import "./gymtime-connection.js";
-
-@customElement("gymtime-account")
-export class GymtimeAccount extends LitElement {
-  @consume({ context: adapterContext })
-  @property({ attribute: false })
-  adapter?: AppAdapter;
-  private readonly session = new Task(this, {
-    args: () => [this.adapter] as const,
-    task: ([adapter], { signal }) =>
-      adapter
-        ? adapter.auth({ type: "session" }, signal)
-        : Promise.resolve(
-            Either.left(
-              new ApiFailure({
-                code: "network",
-                message: "The app is loading.",
-                issues: [],
-              }),
-            ),
-          ),
-  });
-  static override styles = css`
+import "./gymtime-planner.js";
+interface State {
+  readonly status: "Loading" | "Ready";
+  readonly session: Session | undefined;
+  readonly failure: ApiFailure | undefined;
+  readonly signingOut: boolean;
+}
+type Msg =
+  | { readonly _tag: "Loaded"; readonly result: Result<"auth"> }
+  | { readonly _tag: "Logout" }
+  | { readonly _tag: "LoggedOut"; readonly result: Result<"auth"> }
+  | { readonly _tag: "Retry" }
+  | { readonly _tag: "Failed"; readonly failure: ApiFailure };
+const load = () =>
+  command(
+    authDriver,
+    { type: "session" },
+    {
+      key: "session",
+      concurrency: "switch",
+      onSuccess: (result): Msg => ({ _tag: "Loaded", result }),
+      onFailure: (failure): Msg => ({ _tag: "Failed", failure }),
+    },
+  );
+export const GymtimeAccount = define<State, Msg>()("gymtime-account", {
+  init: () => [
+    {
+      status: "Loading",
+      session: undefined,
+      failure: undefined,
+      signingOut: false,
+    },
+    [load()],
+  ],
+  styles: css`
     :host {
       position: relative;
     }
@@ -94,86 +102,84 @@ export class GymtimeAccount extends LitElement {
       outline: 3px solid var(--accent);
       outline-offset: 3px;
     }
-  `;
-  private csrf = "";
-  private readonly signOut = new Task(this, {
-    autoRun: false,
-    args: () => [this.adapter, this.csrf] as const,
-    task: ([adapter, csrf], { signal }) =>
-      adapter
-        ? adapter.auth({ type: "logout", csrf }, signal).then((result) => {
-            if (Either.isRight(result)) window.location.assign("/sign-in");
-            return result;
-          })
-        : Promise.resolve(undefined),
-  });
-  private logout(csrf: string) {
-    this.csrf = csrf;
-    void this.signOut.run();
-  }
-  override render() {
-    return html`${this.signOut.render({
-      complete: (r) =>
-        r && Either.isLeft(r)
-          ? html`<p role="alert">${r.left.message}</p>`
-          : html``,
-      error: () => html`<p role="alert">Sign-out failed. Try again.</p>`,
-    })}${this.session.render({
-      pending: () => html`<p role="status">Checking your account…</p>`,
-      complete: (result) =>
-        Either.isRight(result) && result.right.type === "session"
-          ? html`<div class="account-bar">
-                <details class="account-menu">
-                  <summary>
-                    Account ·
-                    ${result.right.session.organizer ? "Organizer" : "Coach"}
-                  </summary>
-                  <div class="menu-body">
-                    <p>${result.right.session.email}</p>
-                    <button
-                      ?disabled=${this.signOut.status === TaskStatus.PENDING}
-                      @click=${() => {
-                        if (
-                          Either.isRight(result) &&
-                          result.right.type === "session"
-                        )
-                          this.logout(result.right.session.csrf_token);
-                      }}
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                </details>
-              </div>
-              <gymtime-planner
-                .session=${result.right.session}
-              ></gymtime-planner>
-              <details class="connection">
-                <summary>Connection status</summary>
-                <gymtime-connection></gymtime-connection>
-              </details>`
-          : html`<h1>Your gym workspace</h1>
-              <p>
-                ${Either.isLeft(result) &&
-                result.left.code !== "sign_in_required"
-                  ? result.left.message
-                  : "Sign in with your invited email to manage gym time."}
-              </p>
-              <a href="/sign-in">Sign in</a>`,
-      error: () =>
-        html`<h1>Your gym workspace</h1>
-          <p>The service could not be reached.</p>
-          <button
-            ?disabled=${this.signOut.status === TaskStatus.PENDING}
-            @click=${() => this.session.run()}
-          >
-            Try again
-          </button>`,
-    })}`;
-  }
-}
-declare global {
-  interface HTMLElementTagNameMap {
-    "gymtime-account": GymtimeAccount;
-  }
-}
+  `,
+  intent: { Logout: true, Retry: true },
+  update: {
+    Loaded: (s, m) => ({
+      ...s,
+      status: "Ready",
+      session:
+        Either.isRight(m.result) && m.result.right.type === "session"
+          ? m.result.right.session
+          : undefined,
+      failure: Either.isLeft(m.result) ? m.result.left : undefined,
+    }),
+    Logout: (s) =>
+      !s.session || s.signingOut
+        ? s
+        : [
+            { ...s, signingOut: true, failure: undefined },
+            [
+              command(
+                authDriver,
+                { type: "logout", csrf: s.session.csrf_token },
+                {
+                  key: "logout",
+                  concurrency: "exhaust",
+                  onSuccess: (result): Msg => ({ _tag: "LoggedOut", result }),
+                  onFailure: (failure): Msg => ({ _tag: "Failed", failure }),
+                },
+              ),
+            ],
+          ],
+    LoggedOut: (s, m) =>
+      Either.isLeft(m.result)
+        ? { ...s, signingOut: false, failure: m.result.left }
+        : [
+            { ...s, signingOut: false, session: undefined },
+            [navigate("/sign-in")],
+          ],
+    Retry: (s) => [{ ...s, status: "Loading", failure: undefined }, [load()]],
+    Failed: (s, m) => ({
+      ...s,
+      status: "Ready",
+      signingOut: false,
+      failure: m.failure,
+    }),
+  },
+  view: (s, i) => {
+    if (s.status === "Loading")
+      return html`<p role="status">Checking your account…</p>`;
+    const session = s.session;
+    if (!session)
+      return html`<h1>Your gym workspace</h1>
+        <p>
+          ${s.failure && s.failure.code !== "sign_in_required"
+            ? s.failure.message
+            : "Sign in with your invited email to manage gym time."}
+        </p>
+        <a href="/sign-in">Sign in</a>${s.failure?.code === "unexpected"
+          ? html`<button data-intent=${i.Retry}>Try again</button>`
+          : nothing}`;
+    return html`${s.failure
+      ? html`<p role="alert">${s.failure.message}</p>`
+      : nothing}${html`<div class="account-bar">
+        <details class="account-menu">
+          <summary>
+            Account · ${session.organizer ? "Organizer" : "Coach"}
+          </summary>
+          <div class="menu-body">
+            <p>${session.email}</p>
+            <button ?disabled=${s.signingOut} data-intent=${i.Logout}>
+              Sign out
+            </button>
+          </div>
+        </details>
+      </div>
+      <gymtime-planner .session=${session}></gymtime-planner>
+      <details class="connection">
+        <summary>Connection status</summary>
+        <gymtime-connection></gymtime-connection>
+      </details>`}`;
+  },
+});

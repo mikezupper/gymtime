@@ -1,53 +1,36 @@
-import { consume } from "@lit/context";
-import { Task, TaskStatus } from "@lit/task";
+import { command, css, define, focus, html, nothing } from "@gyral/core";
 import { Either } from "effect";
-import { LitElement, css, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
 import { ApiFailure, type AuthAction } from "../domain/api.js";
-import type { AppAdapter } from "../runtime/adapter.js";
-import { adapterContext } from "../state/context.js";
-
-@customElement("gymtime-sign-in")
-export class GymtimeSignIn extends LitElement {
-  @consume({ context: adapterContext })
-  @property({ attribute: false })
-  adapter?: AppAdapter;
-  @state() private phase: "email" | "code" = "email";
-  @state() private email = "";
-  @state() private notice = "";
-  @state() private operation: AuthAction = { type: "session" };
-  private readonly action = new Task(this, {
-    autoRun: false,
-    args: () => [this.adapter, this.operation] as const,
-    task: ([adapter, operation], { signal }) =>
-      adapter
-        ? adapter.auth(operation, signal).then((result) => {
-            if (Either.isRight(result)) {
-              if (result.right.type === "accepted") {
-                this.phase = "code";
-                this.notice = result.right.message;
-                void this.updateComplete.then(() =>
-                  this.renderRoot
-                    .querySelector<HTMLInputElement>("input[name=code]")
-                    ?.focus(),
-                );
-              } else if (result.right.type === "session") {
-                window.location.assign("/app");
-              }
-            }
-            return result;
-          })
-        : Promise.resolve(
-            Either.left(
-              new ApiFailure({
-                code: "network",
-                message: "The app is loading. Try again.",
-                issues: [],
-              }),
-            ),
-          ),
+import { authDriver, navigate, type Result } from "../runtime/commands.js";
+interface State {
+  readonly phase: "email" | "code";
+  readonly email: string;
+  readonly notice: string;
+  readonly status: "Idle" | "Working";
+  readonly failure: ApiFailure | undefined;
+}
+type Msg =
+  | { readonly _tag: "Submit"; readonly action: AuthAction }
+  | { readonly _tag: "Resend" }
+  | { readonly _tag: "Another" }
+  | { readonly _tag: "Answered"; readonly result: Result<"auth"> }
+  | { readonly _tag: "Failed"; readonly failure: ApiFailure };
+const request = (action: AuthAction) =>
+  command(authDriver, action, {
+    key: "auth",
+    concurrency: "exhaust",
+    onSuccess: (result): Msg => ({ _tag: "Answered", result }),
+    onFailure: (failure): Msg => ({ _tag: "Failed", failure }),
   });
-  static override styles = css`
+export const GymtimeSignIn = define<State, Msg>()("gymtime-sign-in", {
+  init: () => ({
+    phase: "email",
+    email: "",
+    notice: "",
+    status: "Idle",
+    failure: undefined,
+  }),
+  styles: css`
     @layer components {
       :host {
         display: block;
@@ -110,28 +93,67 @@ export class GymtimeSignIn extends LitElement {
         padding-inline-start: 1rem;
       }
     }
-  `;
-  private submit(event: SubmitEvent) {
-    event.preventDefault();
-    if (!(event.currentTarget instanceof HTMLFormElement)) return;
-    const values = new FormData(event.currentTarget);
-    if (this.phase === "email") {
-      this.email = String(values.get("email") ?? "");
-      this.operation = { type: "request", email: this.email };
-    } else {
-      this.operation = {
-        type: "verify",
-        email: this.email,
-        code: String(values.get("code") ?? ""),
-      };
-    }
-    void this.action.run();
-  }
-  private resend() {
-    this.operation = { type: "request", email: this.email };
-    void this.action.run();
-  }
-  override render() {
+  `,
+  intent: {
+    Submit: ({ formData }, { state: s }) => {
+      if (!formData) return undefined;
+      const email = formData.get("email");
+      const code = formData.get("code");
+      if (s.phase === "email")
+        return typeof email === "string" && email.length > 0
+          ? { _tag: "Submit", action: { type: "request", email } }
+          : undefined;
+      return typeof code === "string" && /^\d{6}$/.test(code)
+        ? { _tag: "Submit", action: { type: "verify", email: s.email, code } }
+        : undefined;
+    },
+    Resend: true,
+    Another: true,
+  },
+  update: {
+    Submit: (s, m) =>
+      s.status === "Working"
+        ? s
+        : [
+            {
+              ...s,
+              status: "Working",
+              failure: undefined,
+              email: m.action.type === "request" ? m.action.email : s.email,
+            },
+            [request(m.action)],
+          ],
+    Resend: (s) =>
+      s.status === "Working"
+        ? s
+        : [
+            { ...s, status: "Working", failure: undefined },
+            [request({ type: "request", email: s.email })],
+          ],
+    Another: (s) =>
+      s.status === "Working"
+        ? s
+        : { ...s, phase: "email", notice: "", failure: undefined },
+    Answered: (s, m) =>
+      Either.isLeft(m.result)
+        ? { ...s, status: "Idle", failure: m.result.left }
+        : m.result.right.type === "accepted"
+          ? [
+              {
+                ...s,
+                phase: "code",
+                status: "Idle",
+                notice: m.result.right.message,
+                failure: undefined,
+              },
+              [focus("input[name=code]")],
+            ]
+          : m.result.right.type === "session"
+            ? [{ ...s, status: "Idle" }, [navigate("/app")]]
+            : { ...s, status: "Idle" },
+    Failed: (s, m) => ({ ...s, status: "Idle", failure: m.failure }),
+  },
+  view: (s, i) => {
     return html`<h1>Sign in to Gymtime</h1>
       <p>
         Use the email address your gym organizer invited. We’ll email you a
@@ -149,9 +171,9 @@ export class GymtimeSignIn extends LitElement {
           uses the email configured when this instance was deployed.
         </p>
       </details>
-      ${this.notice ? html`<p role="status">${this.notice}</p>` : nothing}
-      <form @submit=${this.submit} aria-label="Email sign-in">
-        ${this.phase === "email"
+      ${s.notice ? html`<p role="status">${s.notice}</p>` : nothing}
+      <form data-intent=${i.Submit} aria-label="Email sign-in">
+        ${s.phase === "email"
           ? html`<label
               >Email address<input
                 name="email"
@@ -159,14 +181,14 @@ export class GymtimeSignIn extends LitElement {
                 autocomplete="email"
                 required
                 maxlength="254"
-                .value=${this.email}
+                value=${s.email}
             /></label>`
-          : html`<p>Signing in as <strong>${this.email}</strong></p>
+          : html`<p>Signing in as <strong>${s.email}</strong></p>
               <label
                 >Sign-in code<input
                   name="code"
                   inputmode="numeric"
-                  .autocomplete=${"one-time-code"}
+                  autocomplete=${"one-time-code"}
                   pattern="[0-9]{6}"
                   minlength="6"
                   maxlength="6"
@@ -177,49 +199,35 @@ export class GymtimeSignIn extends LitElement {
                 Codes expire after 10 minutes. You can request a new code after
                 60 seconds.
               </p>`}
-        ${this.action.render({
-          pending: () => html`<button disabled>Working…</button>`,
-          complete: (result) =>
-            html`${Either.isLeft(result)
-                ? html`<p role="alert">
-                    ${result.left.message}${result.left.issues.map(
-                      (issue) => html`<br />${issue.message}`,
-                    )}
-                  </p>`
-                : nothing}<button>
-                ${this.phase === "email" ? "Email me a code" : "Sign in"}
-              </button>`,
-          initial: () => html`<button>Email me a code</button>`,
-          error: () =>
-            html`<p role="alert">
-                The service could not be reached. Try again.
-              </p>
-              <button>Try again</button>`,
-        })}
+        ${s.failure
+          ? html`<p role="alert">
+              ${s.failure.message}${s.failure.issues.map(
+                (issue) => html`<br />${issue.message}`,
+              )}
+            </p>`
+          : nothing}<button ?disabled=${s.status === "Working"}>
+          ${s.status === "Working"
+            ? "Working…"
+            : s.phase === "email"
+              ? "Email me a code"
+              : "Sign in"}
+        </button>
       </form>
-      ${this.phase === "code"
+      ${s.phase === "code"
         ? html`<button
               class="secondary"
-              ?disabled=${this.action.status === TaskStatus.PENDING}
-              @click=${this.resend}
+              ?disabled=${s.status === "Working"}
+              data-intent=${i.Resend}
             >
               Resend code
             </button>
             <button
               class="secondary"
-              ?disabled=${this.action.status === TaskStatus.PENDING}
-              @click=${() => {
-                this.phase = "email";
-                this.notice = "";
-              }}
+              ?disabled=${s.status === "Working"}
+              data-intent=${i.Another}
             >
               Use another email
             </button>`
         : nothing}`;
-  }
-}
-declare global {
-  interface HTMLElementTagNameMap {
-    "gymtime-sign-in": GymtimeSignIn;
-  }
-}
+  },
+});

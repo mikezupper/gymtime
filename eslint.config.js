@@ -1,12 +1,11 @@
 import tseslint from "typescript-eslint";
-import lit from "eslint-plugin-lit";
-import wc from "eslint-plugin-wc";
+import gyral from "@gyral/core/eslint";
 
 export default tseslint.config(
-  { ignores: ["**/dist/**", "**/node_modules/**", ".agents/**", "packages/contracts/src/**"] },
+  { ignores: ["**/dist/**", "**/node_modules/**", "**/.gyral/**", ".local/**", ".agents/**", "packages/contracts/src/**"] },
   ...tseslint.configs.recommended,
-  { files: ["**/*.ts"], plugins: { lit, wc }, rules: {
-    ...lit.configs.recommended.rules, ...wc.configs.recommended.rules,
+  { files: ["apps/web/**/*.ts", "tests/browser/**/*.ts"], ...gyral.configs.recommended },
+  { files: ["**/*.ts"], rules: {
     "@typescript-eslint/no-explicit-any": "error", "@typescript-eslint/no-non-null-assertion": "error",
     "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
   } },

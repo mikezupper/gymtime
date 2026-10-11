@@ -19,3 +19,5 @@ tests/browser/__screenshots__
 *.sqlite*
 *.pem
 *.key
+
+**/.gyral

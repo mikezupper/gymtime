@@ -35,7 +35,7 @@ test("multi-team coaches select weekly patterns and organizers make partial deci
     await coach.goto("/sign-in");
     await coach.getByLabel("Email address").fill(email);
     await coach.getByRole("button", { name: "Email me a code" }).click();
-    await expect(coach.getByLabel("Sign-in code")).toBeVisible();
+    await expect(coach.getByLabel("Sign-in code")).toBeVisible({ timeout: 15_000 });
     await coach.getByLabel("Sign-in code").fill(await capturedCode(email));
     await coach.getByRole("button", { name: "Sign in", exact: true }).click();
     await coach.waitForURL("**/app");

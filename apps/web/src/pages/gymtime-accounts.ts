@@ -1,55 +1,43 @@
-import { consume } from "@lit/context";
-import { Task, TaskStatus } from "@lit/task";
+import { command, css, define, html, nothing, type PropsOf } from "@gyral/core";
 import { Either } from "effect";
-import { LitElement, css, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-import { ApiFailure, type AccountAction, type Session } from "../domain/api.js";
-import type { AppAdapter } from "../runtime/adapter.js";
-import { adapterContext } from "../state/context.js";
 import "../components/gymtime-help-tip.js";
-
-@customElement("gymtime-accounts")
-export class GymtimeAccounts extends LitElement {
-  @consume({ context: adapterContext })
-  @property({ attribute: false })
-  adapter?: AppAdapter;
-  @property({ attribute: false }) session?: Session;
-  @state() private operation: AccountAction = { type: "list" };
-  private readonly accounts = new Task(this, {
-    args: () => [this.adapter, this.session] as const,
-    task: ([adapter], { signal }) =>
-      adapter
-        ? adapter.accounts({ type: "list" }, signal)
-        : Promise.resolve(
-            Either.left(
-              new ApiFailure({
-                code: "network",
-                message: "The app is loading.",
-                issues: [],
-              }),
-            ),
-          ),
+import { idFrom, sessionProp } from "../components/props.js";
+import { ApiFailure, type AccountAction } from "../domain/api.js";
+import { accountsDriver, type Result } from "../runtime/commands.js";
+import { remoteView, type Remote } from "./remote-view.js";
+const props = { session: sessionProp() };
+type Props = PropsOf<typeof props>;
+interface State {
+  readonly accounts: Remote<Result<"accounts">>;
+  readonly action: Remote<Result<"accounts">>;
+}
+type Msg =
+  | { readonly _tag: "Invite"; readonly action: AccountAction }
+  | { readonly _tag: "Toggle"; readonly id: number }
+  | { readonly _tag: "Loaded"; readonly result: Result<"accounts"> }
+  | { readonly _tag: "Saved"; readonly result: Result<"accounts"> }
+  | { readonly _tag: "Failed"; readonly failure: ApiFailure };
+const load = () =>
+  command(
+    accountsDriver,
+    { type: "list" },
+    {
+      key: "accounts-load",
+      concurrency: "switch",
+      onSuccess: (result): Msg => ({ _tag: "Loaded", result }),
+      onFailure: (failure): Msg => ({ _tag: "Failed", failure }),
+    },
+  );
+const save = (action: AccountAction) =>
+  command(accountsDriver, action, {
+    key: "accounts-save",
+    concurrency: "exhaust",
+    onSuccess: (result): Msg => ({ _tag: "Saved", result }),
+    onFailure: (failure): Msg => ({ _tag: "Failed", failure }),
   });
-  private readonly action = new Task(this, {
-    autoRun: false,
-    args: () => [this.adapter, this.operation] as const,
-    task: ([adapter, operation], { signal }) =>
-      adapter
-        ? adapter.accounts(operation, signal).then((result) => {
-            if (Either.isRight(result)) void this.accounts.run();
-            return result;
-          })
-        : Promise.resolve(
-            Either.left(
-              new ApiFailure({
-                code: "network",
-                message: "The app is loading.",
-                issues: [],
-              }),
-            ),
-          ),
-  });
-  static override styles = css`
+export const GymtimeAccounts = define<State, Msg, Props>()("gymtime-accounts", {
+  props,
+  styles: css`
     .section-heading {
       display: flex;
       align-items: center;
@@ -120,31 +108,78 @@ export class GymtimeAccounts extends LitElement {
       outline: 3px solid var(--accent);
       outline-offset: 3px;
     }
-  `;
-  private invite(event: SubmitEvent) {
-    event.preventDefault();
-    if (!this.session || !(event.currentTarget instanceof HTMLFormElement))
-      return;
-    const values = new FormData(event.currentTarget);
-    this.operation = {
-      type: "invite",
-      email: String(values.get("email") ?? ""),
-      role: values.get("role") === "organizer" ? "organizer" : "coach",
-      csrf: this.session.csrf_token,
-    };
-    void this.action.run();
-  }
-  private toggle(userId: number, enabled: boolean) {
-    if (!this.session) return;
-    this.operation = {
-      type: "status",
-      userId,
-      enabled,
-      csrf: this.session.csrf_token,
-    };
-    void this.action.run();
-  }
-  override render() {
+  `,
+  init: () => [
+    { accounts: { _tag: "Loading" }, action: { _tag: "Idle" } },
+    [load()],
+  ],
+  intent: {
+    Invite: ({ formData }, { props: p }) => {
+      const email = formData?.get("email");
+      return typeof email === "string" && p.session
+        ? {
+            _tag: "Invite",
+            action: {
+              type: "invite",
+              email,
+              role:
+                formData?.get("role") === "organizer" ? "organizer" : "coach",
+              csrf: p.session.csrf_token,
+            },
+          }
+        : undefined;
+    },
+    Toggle: ({ value }) => {
+      const id = idFrom(value);
+      return id ? { _tag: "Toggle", id } : undefined;
+    },
+  },
+  update: {
+    Invite: (s, m) =>
+      s.action._tag === "Loading"
+        ? s
+        : [{ ...s, action: { _tag: "Loading" } }, [save(m.action)]],
+    Toggle: (s, m, { props: p }) => {
+      if (
+        !p.session ||
+        s.action._tag === "Loading" ||
+        s.accounts._tag !== "Ready" ||
+        Either.isLeft(s.accounts.value)
+      )
+        return s;
+      const account = s.accounts.value.right.find((a) => a.user_id === m.id);
+      return !account
+        ? s
+        : [
+            { ...s, action: { _tag: "Loading" } },
+            [
+              save({
+                type: "status",
+                userId: m.id,
+                enabled: !account.enabled,
+                csrf: p.session.csrf_token,
+              }),
+            ],
+          ];
+    },
+    Loaded: (s, m) => ({ ...s, accounts: { _tag: "Ready", value: m.result } }),
+    Saved: (s, m) => ({
+      ...s,
+      action: { _tag: "Ready", value: m.result },
+      accounts: Either.isRight(m.result)
+        ? { _tag: "Ready", value: m.result }
+        : s.accounts,
+    }),
+    Failed: (s, m) => ({
+      ...s,
+      accounts:
+        s.accounts._tag === "Loading"
+          ? { _tag: "Failed", failure: m.failure }
+          : s.accounts,
+      action: { _tag: "Failed", failure: m.failure },
+    }),
+  },
+  view: (s, i) => {
     return html`<section aria-labelledby="accounts-title">
       <div class="section-heading">
         <h2 id="accounts-title">People and invitations</h2>
@@ -155,7 +190,7 @@ export class GymtimeAccounts extends LitElement {
         bookings each coach can change. Disabling an account ends its signed-in
         sessions.
       </p>
-      <form @submit=${this.invite}>
+      <form data-intent=${i.Invite}>
         <label
           >Email address<input
             name="email"
@@ -168,13 +203,13 @@ export class GymtimeAccounts extends LitElement {
             <option value="coach">Coach</option>
             <option value="organizer">Organizer</option>
           </select></label
-        ><button ?disabled=${this.action.status === TaskStatus.PENDING}>
+        ><button ?disabled=${s.action._tag === "Loading"}>
           Send invitation
         </button>
       </form>
-      ${this.action.render({
-        pending: () => html`<p role="status">Saving…</p>`,
-        complete: (value) =>
+      ${remoteView(s.action, {
+        loading: () => html`<p role="status">Saving…</p>`,
+        ready: (value) =>
           Either.isLeft(value)
             ? html`<p role="alert">
                 ${value.left.message}${value.left.issues.map(
@@ -182,15 +217,15 @@ export class GymtimeAccounts extends LitElement {
                 )}
               </p>`
             : html`<p role="status">Account updated.</p>`,
-        error: () =>
+        failed: () =>
           html`<p role="alert">
             The service could not be reached. Try again.
           </p>`,
-        initial: () => nothing,
+        idle: () => nothing,
       })}
-      ${this.accounts.render({
-        pending: () => html`<p role="status">Loading invited accounts…</p>`,
-        complete: (value) =>
+      ${remoteView(s.accounts, {
+        loading: () => html`<p role="status">Loading invited accounts…</p>`,
+        ready: (value) =>
           Either.isRight(value)
             ? html`<ul>
                 ${value.right.map(
@@ -201,9 +236,9 @@ export class GymtimeAccounts extends LitElement {
                         ><br />${account.organizer ? "Organizer" : "Coach"} ·
                         ${account.enabled ? "Enabled" : "Disabled"}</span
                       ><button
-                        ?disabled=${this.action.status === TaskStatus.PENDING}
-                        @click=${() =>
-                          this.toggle(account.user_id, !account.enabled)}
+                        ?disabled=${s.action._tag === "Loading"}
+                        data-intent=${i.Toggle}
+                        value=${account.user_id}
                         aria-label=${`${account.enabled ? "Disable" : "Enable"} ${account.email}`}
                       >
                         ${account.enabled ? "Disable" : "Enable"}
@@ -212,13 +247,8 @@ export class GymtimeAccounts extends LitElement {
                 )}
               </ul>`
             : html`<p role="alert">${value.left.message}</p>`,
-        error: () => html`<p role="alert">Accounts could not be loaded.</p>`,
+        failed: () => html`<p role="alert">Accounts could not be loaded.</p>`,
       })}
     </section>`;
-  }
-}
-declare global {
-  interface HTMLElementTagNameMap {
-    "gymtime-accounts": GymtimeAccounts;
-  }
-}
+  },
+});

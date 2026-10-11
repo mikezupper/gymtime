@@ -34,3 +34,6 @@ tests/browser/__screenshots__/
 *.pfx
 .envrc
 .envrc.*
+
+# Gyral generates element declarations from exported definitions.
+.gyral/

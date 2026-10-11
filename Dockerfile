@@ -4,6 +4,8 @@ WORKDIR /build
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.json ./
+COPY vendor ./vendor
+RUN cd vendor/gyral/0.3.1-next.9 && sha256sum --strict --check SHA256SUMS
 COPY apps/web ./apps/web
 COPY packages/contracts ./packages/contracts
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile

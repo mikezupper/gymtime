@@ -1,6 +1,6 @@
 # Gymtime Scaffold Specification
 
-The scaffold establishes a bootable Lit frontend and Rust service, a SQLite migration path, generated API contracts, committed skill copies, and reproducible checks. It provides the foundation for the behavior in [Requirements](requirements.md); it will not claim to implement scheduling features through placeholder screens.
+The scaffold establishes a bootable Gyral frontend and Rust service, a SQLite migration path, generated API contracts, committed skill copies, and reproducible checks. It provides the foundation for the behavior in [Requirements](requirements.md); it will not claim to implement scheduling features through placeholder screens.
 
 This document defines the implementation contract for that foundation. The files and commands below are implemented. Product workflows now extend this foundation; their acceptance boundary is [Requirements](requirements.md). Task status belongs in Beads. The architecture is defined in [Architecture](../ARCHITECTURE.md) and [Frontend architecture](frontend.md).
 
@@ -19,7 +19,7 @@ pnpm-lock.yaml
 rust-toolchain.toml
 Cargo.toml
 Cargo.lock
-apps/web/                      Lit application and landing-page generation
+apps/web/                      Gyral application and landing-page generation
 packages/contracts/            generated TypeScript transport package
 contracts/openapi.json         generated public HTTP contract
 crates/domain/                 gymtime-domain
@@ -30,6 +30,7 @@ crates/server/                 gymtime-server; production wiring and binary
 migrations/                    ordered SQLite migrations
 .sqlx/                         SQLx offline query metadata when macros are used
 tools/                         contract, architecture, docs, and skill tooling
+vendor/gyral/0.3.1-next.9/      unchanged release artifacts for the proposed rewrite
 Dockerfile                     staged frontend and Rust build
 compose.yaml                   production app and external Traefik integration
 compose.dev.yaml               independent local setup with test email API
@@ -50,13 +51,11 @@ The baseline pins were resolved and built on October 2, 2026; the selected Rust 
 | pnpm | `12.8.2` | Exact root `packageManager` value |
 | TypeScript | `5.9.3` | Compatible with the selected transport generator |
 | Vite | `8.3.2` | Frontend development and production asset build |
-| Lit | `3.3.3` | Components and templates |
+| `@gyral/core` | `0.3.1-next.9` (vendored) | Components, templates, drivers, Vite, ESLint, and element types |
 | Effect | `3.22.2` | The requested skill targets version 3 |
 | `@effect/platform` | `0.97.2` | Companion version whose peer range accepts this Effect version |
 | `@effect/language-service` | `0.87.3` | Effect editor and diagnostic integration |
-| `@lit/context` / `@lit/task` | `1.1.6` / `1.0.3` | Stable context and asynchronous rendering |
-| `@lit-labs/signals` | `0.3.0` | Shared reactive state; one transitive polyfill |
-| `@lit-labs/ssr` | `4.1.0` | Build-time landing rendering only |
+| `@gyral/ssr` / `@gyral/testing` | `0.3.1-next.9` (vendored) | Landing rendering and model verification |
 | Vitest / `@vitest/browser-playwright` | `4.1.11` / `4.1.11` | Matching browser test runner and provider |
 | Playwright | `1.63.0` | Browser verification |
 | `openapi-typescript` | `7.13.0` | Generated transport declarations |
@@ -71,7 +70,7 @@ The baseline pins were resolved and built on October 2, 2026; the selected Rust 
 
 Node's [release schedule](https://nodejs.org/en/about/previous-releases) and Vite's [runtime requirements](https://vite.dev/guide/) support using Node 24. Package versions and peer constraints come from the [npm registry](https://registry.npmjs.org/) and [crates.io](https://crates.io/). Lint, template analysis, test, and build packages are pinned in the lockfiles.
 
-The Lit skill selects Vitest 4. Effect 3's [`@effect/vitest` 0.30.0 metadata](https://registry.npmjs.org/@effect%2Fvitest/0.30.0) requires Vitest 3, so do not install that integration or a second runner. Use the scoped workflow test adapter described in the frontend document. A newer Effect major is not an automatic substitute for the requested skill's version 3 APIs.
+The frontend uses Vitest 4. Effect 3's [`@effect/vitest` 0.30.0 metadata](https://registry.npmjs.org/@effect%2Fvitest/0.30.0) requires Vitest 3, so do not install that integration or a second runner. Use the scoped workflow test adapter described in the frontend document. A newer Effect major is not an automatic substitute for the requested skill's version 3 APIs.
 
 The selected [Resend SDK documentation](https://docs.rs/resend-rs/0.33.0/resend_rs/index.html) describes the required `RESEND_API_KEY` and `RESEND_BASE_URL` behavior. The update to 0.33.0 passed the existing custom-endpoint adapter test. Later SDK versions can be adopted when those tests demonstrate the same behavior; an update is not required merely because the registry lists it.
 
@@ -87,8 +86,9 @@ These root commands are the scaffold interface.
 | `pnpm dev` | Start Vite and Rust with coordinated shutdown and a same-origin API proxy |
 | `pnpm dev:api` | Start just the Rust service with local configuration |
 | `pnpm check` | Type, template, lint, formatting, Rust lint, architecture, contract, and documentation checks |
+| `pnpm vendor:check` | Verify every vendored Gyral archive and release provenance against the supplied checksums; also included in `check` |
 | `pnpm test:unit` | Pure and service tests, including Rust tests and SQLite integration tests |
-| `pnpm test:browser` | Lit component tests in real browsers |
+| `pnpm test:browser` | Gyral component tests in real browsers |
 | `pnpm test:e2e` | Full-stack Playwright tests with isolated database and email state |
 | `pnpm build` | Generate landing/assets/contracts and compile the Rust application |
 | `pnpm contract:generate` | Export OpenAPI from Rust and regenerate TypeScript transport types |
@@ -107,7 +107,7 @@ Use separate development ports, database paths, and email state for each worktre
 
 Rust API DTOs and route annotations generate `contracts/openapi.json`. `packages/contracts` exposes generated transport types. The generator must not start the HTTP server, send email, or open the production database. API schemas and generated output are reviewed together.
 
-Enforce Rust crate dependencies from Cargo metadata and reject framework or driver dependencies in the domain. Prevent infra imports from app or API. Use strict TypeScript, Lit template analysis, and lint rules to enforce the frontend import map, named errors, and runtime execution boundary. Generated files are exempt from hand-authored style rules, not from contract drift checks.
+Enforce Rust crate dependencies from Cargo metadata and reject framework or driver dependencies in the domain. Prevent infra imports from app or API. Use strict TypeScript, Gyral element type generation and template lint, and lint rules to enforce the frontend import map, named errors, and runtime execution boundary. Generated files are exempt from hand-authored style rules, not from contract drift checks.
 
 SQL migrations apply in order before readiness and enable foreign keys. If SQLx compile-time query macros are used, generate offline metadata against a migrated temporary SQLite database and verify it in CI. Do not require a running production database to compile. Generate readable schema documentation from migrations when actual tables exist.
 
@@ -123,7 +123,7 @@ The check command reports changes on the configured release or branch policy. It
 
 The update command resolves an explicit revision, prepares the copied material and manifest together, and shows a reviewable instruction diff. Refuse to overwrite locally edited copies without resolving those edits. Validate reference paths, provenance, hashes, and required license material before replacement. An unsuccessful update leaves the existing copy and manifest intact. Do not run scheduled updates or create automatic update pull requests.
 
-After copying, update the root guide and document links to use the committed entrypoints. Keep the documented interpretations of the styled Lit app, Effect/Lit boundary, Vitest compatibility, and SQLite adaptation when reviewing changed upstream guidance.
+After copying, update the root guide and document links to use the committed entrypoints. Keep the documented interpretations of the styled Gyral app, Effect/Gyral boundary, Vitest compatibility, and SQLite adaptation when reviewing changed upstream guidance.
 
 ## Docker and configuration
 
@@ -164,11 +164,11 @@ Beads was initialized without installing hooks or replacing the custom agent gui
 
 ## Compatibility decisions
 
-ESLint is pinned to 10.11.0 with compatible TypeScript and Lit plugins. Lit analyzer 2.0.3 uses `vscode-css-languageservice` 6.3.10 through a scoped pnpm override so modern `@layer` syntax is understood. The workspace has one `signal-polyfill` 0.2.2. Vitest 4 uses hand-written Effect Layers and scoped runtime disposal instead of the incompatible Effect/Vitest 3 integration.
+ESLint is pinned to 10.11.0 with TypeScript and the vendored Gyral recommended rules. The Gyral Vite preset compiles templates in production builds and generates ignored `.gyral/elements.d.ts` declarations; `check` runs `gyral-types` before TypeScript. Vitest 4 uses hand-written Effect Layers and scoped runtime disposal instead of the incompatible Effect/Vitest 3 integration.
 
 The Resend SDK adapter uses the SDK's raw relative `emails` request. Its convenience method uses `/emails` and discards a custom URL path prefix. Integration tests verify a prefixed endpoint, bearer authentication, request fields, a transient failure, and a stable idempotency key. The server constructs this adapter but does not send email until authentication and notification workflows exist.
 
-The app root uses light DOM for document landmarks and native skip links. Nested Lit components retain shadow DOM. Rendering depends on supplied route state; reading the browser URL happens at client startup. The landing page is generated HTML and needs no JavaScript.
+The app root uses light DOM for document landmarks and native skip links. Nested Gyral components retain shadow DOM. Rendering depends on supplied route state; reading the browser URL happens at client startup. The landing page is generated HTML and needs no JavaScript.
 
 ## Verification record
 

@@ -1,8 +1,14 @@
+import { settled, defineDriver } from "@gyral/core";
+import {
+  accountsDriver,
+  scheduleDriver,
+  saveDriver,
+  guidanceDriver,
+} from "../../apps/web/src/runtime/commands.js";
 import { afterEach, expect, it } from "vitest";
 import { Effect, Schema } from "effect";
 import { Either } from "effect";
 import "../../apps/web/src/pages/gymtime-planner.js";
-import { createAdapter } from "../../apps/web/src/runtime/adapter.js";
 import "../../apps/web/src/components/gymtime-guide.js";
 import { initialGuidance } from "../../apps/web/src/domain/guidance.js";
 import { Session } from "../../apps/web/src/domain/api.js";
@@ -36,7 +42,6 @@ const session = Schema.decodeUnknownSync(Session)({
   csrf_token: "a".repeat(64),
 });
 it("the first saved season becomes the workspace selection without reloading", async () => {
-  const runtime = createAdapter();
   const saved: Schedule = {
     ...schedule,
     seasons: [
@@ -52,12 +57,22 @@ it("the first saved season becomes the workspace selection without reloading", a
   };
   const planner = document.createElement("gymtime-planner");
   planner.session = { ...session, organizer: true };
-  planner.adapter = {
-    ...runtime,
-    schedule: () => Promise.resolve(Either.right(schedule)),
-    accounts: () => Promise.resolve(Either.right([])),
-    save: () =>
-      Promise.resolve(
+  planner.drivers = {
+    [scheduleDriver.name]: defineDriver({
+      name: scheduleDriver.name,
+      run: () => Either.right(schedule),
+    }),
+    [accountsDriver.name]: defineDriver({
+      name: accountsDriver.name,
+      run: () => Either.right([]),
+    }),
+    [guidanceDriver.name]: defineDriver({
+      name: guidanceDriver.name,
+      run: () => Either.right(initialGuidance),
+    }),
+    [saveDriver.name]: defineDriver({
+      name: saveDriver.name,
+      run: () =>
         Either.right({
           key: "a".repeat(64),
           result: Either.right({
@@ -65,27 +80,25 @@ it("the first saved season becomes the workspace selection without reloading", a
             outcome: { resources: [{ kind: "season", id: 7 }], warnings: [] },
           }),
         }),
-      ),
+    }),
   };
   document.body.append(planner);
-  await planner.updateComplete;
+  await settled();
   await expect
     .poll(() => planner.shadowRoot?.querySelector("select"))
     .toBeTruthy();
-  const workspace = planner.shadowRoot?.querySelector("div");
-  workspace?.dispatchEvent(
-    new CustomEvent("schedule-action", {
-      bubbles: true,
-      detail: {
-        action: {
-          operation: "create_season",
-          name: "First season",
-          start_date: "2027-01-01",
-          end_date: "2027-02-01",
-        },
-      },
-    }),
-  );
+  planner.send({
+    _tag: "Action",
+    action: {
+      operation: "create_season",
+      name: "First season",
+      start_date: "2027-01-01",
+      end_date: "2027-02-01",
+    },
+    confirmation: "",
+    preview: false,
+    formKey: "create_season",
+  });
   await expect
     .poll(
       () =>
@@ -96,15 +109,14 @@ it("the first saved season becomes the workspace selection without reloading", a
     planner.shadowRoot?.querySelectorAll("nav button") ?? [],
   ).find((button) => button.textContent?.trim() === "Help");
   if (help instanceof HTMLButtonElement) help.click();
-  await planner.updateComplete;
+  await settled();
   const guide = planner.shadowRoot?.querySelector("gymtime-guide");
-  await guide?.updateComplete;
+  await settled();
   expect(guide?.shadowRoot?.textContent).toContain("First season");
   expect(guide?.shadowRoot?.textContent).toContain(
     "1 of 7 setup steps complete",
   );
   planner.remove();
-  await runtime.dispose();
 });
 afterEach(() => {
   document.body.replaceChildren();
@@ -116,17 +128,19 @@ it("fresh setup follows saved configuration and does not complete steps merely b
   guide.schedule = schedule;
   guide.session = { ...session, organizer: true };
   document.body.append(guide);
-  await guide.updateComplete;
+  await settled();
   expect(guide.shadowRoot?.textContent).toContain(
     "0 of 7 setup steps complete",
   );
   let destination = "";
-  guide.addEventListener("help-go", (event) => {
-    if (event instanceof CustomEvent) destination = String(event.detail);
+  guide.addEventListener("gyral-output", (event) => {
+    if (event instanceof CustomEvent && event.detail?._tag === "HelpGo")
+      destination = event.detail.destination;
   });
   guide.shadowRoot
     ?.querySelector<HTMLButtonElement>(".guide-step button")
     ?.click();
+  await settled();
   expect(destination).toBe("gym-setup");
   expect(guide.shadowRoot?.textContent).toContain(
     "0 of 7 setup steps complete",
@@ -150,17 +164,17 @@ it("fresh setup follows saved configuration and does not complete steps merely b
     ],
   };
   guide.season = 1;
-  await guide.updateComplete;
+  await settled();
   expect(guide.shadowRoot?.textContent).toContain(
     "2 of 7 setup steps complete",
   );
   guide.preferences = { ...initialGuidance, closures_reviewed: [1] };
-  await guide.updateComplete;
+  await settled();
   expect(guide.shadowRoot?.textContent).toContain(
     "3 of 7 setup steps complete",
   );
   guide.season = 2;
-  await guide.updateComplete;
+  await settled();
   expect(guide.shadowRoot?.textContent).toContain(
     "1 of 7 setup steps complete",
   );
@@ -180,7 +194,7 @@ it("assistant and mixed-role guides explain permissions per team without grantin
   };
   guide.schedule = { ...schedule, teams: [team] };
   document.body.append(guide);
-  await guide.updateComplete;
+  await settled();
   expect(guide.shadowRoot?.textContent).toContain(
     "Assistant coach: view schedules",
   );
@@ -194,7 +208,7 @@ it("assistant and mixed-role guides explain permissions per team without grantin
       { ...team, id: 2, name: "7th Girls", primary: 50, assistants: [] },
     ],
   };
-  await guide.updateComplete;
+  await settled();
   expect(guide.shadowRoot?.textContent).toContain(
     "Primary coach: request and change time",
   );
@@ -229,4 +243,58 @@ it("browser help preferences survive reloads, stay account-scoped, and report co
     readGuidance(50).pipe(Effect.provide(BrowserGuidance), Effect.either),
   );
   expect(result._tag).toBe("Left");
+});
+
+it("selects My teams when a coach's calendar options first mount", async () => {
+  const planner = document.createElement("gymtime-planner");
+  planner.session = session;
+  planner.drivers = {
+    [scheduleDriver.name]: defineDriver({
+      name: scheduleDriver.name,
+      run: () =>
+        Either.right({
+          ...schedule,
+          seasons: [
+            {
+              id: 1,
+              name: "Winter",
+              start_date: "2027-01-01",
+              end_date: "2027-02-01",
+              status: "active",
+              version: 1,
+            },
+          ],
+          teams: [
+            {
+              id: 1,
+              name: "6th Girls",
+              primary: 50,
+              assistants: [],
+              seasons: [1],
+              share_token: null,
+              version: 1,
+            },
+          ],
+        }),
+    }),
+    [guidanceDriver.name]: defineDriver({
+      name: guidanceDriver.name,
+      run: () => Either.right(initialGuidance),
+    }),
+  };
+  document.body.append(planner);
+  await settled();
+  const select = Array.from(
+    planner.shadowRoot?.querySelectorAll("select") ?? [],
+  ).find((x) => x.closest("label")?.textContent?.includes("View teams"));
+  expect(select?.value).toBe("-1");
+  if (select) {
+    select.value = "0";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  await settled();
+  expect(select?.value).toBe("0");
+  planner.send({ _tag: "Refresh" });
+  await settled();
+  expect(select?.value).toBe("0");
 });

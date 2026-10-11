@@ -1,15 +1,17 @@
 # Gymtime Engineering Decisions
 
-Gymtime will use a Lit and TypeScript frontend and a Rust backend with SQLite. It will run through Docker Compose on the owner's VPS. The project will follow the harness engineering approach in the supplied reference: keep decisions in the repository, give agents a short navigation guide, enforce architecture rules with tools, and make the app easy to run and inspect.
+Gymtime uses a Gyral and TypeScript frontend and a Rust backend with SQLite. It will run through Docker Compose on the owner's VPS. The project will follow the harness engineering approach in the supplied reference: keep decisions in the repository, give agents a short navigation guide, enforce architecture rules with tools, and make the app easy to run and inspect.
 
 This document records the project owner's engineering requirements and their interpretation for the scaffold. It is for the owner and future contributors. Product behavior is defined in [Gymtime requirements](requirements.md); supporting designs are specified in [Architecture](../ARCHITECTURE.md), [Frontend architecture](frontend.md), and [Scaffold specification](scaffold.md). The foundation, OTP, scheduling, notifications, and parent calendars are implemented. [Verification](verification.md) records local test evidence and release limits.
+
+On October 10, 2026, the owner requested a rewrite using Gyral `0.3.1-next.9` and conventions from the Sabacc and starwars.run reference projects. The [rewrite review](gyral-rewrite.md) records the approved frontend scope with the existing Rust/SQLite backend. The exact release is [vendored](../vendor/gyral/0.3.1-next.9/README.md), with checksum checks in local verification and Docker. The tables below describe the resulting implementation.
 
 ## Confirmed stack and workflow
 
 | Concern | Decision |
 | --- | --- |
 | Repository | One repository for the frontend, backend, contracts, and project documents |
-| Frontend | Lit, TypeScript, Effect, semantic HTML, and modern CSS, following the requested skills |
+| Frontend | Gyral, TypeScript, Effect, semantic HTML, and modern CSS, following the requested skills |
 | Frontend tooling | pnpm and Vite |
 | Backend | Rust, following the functional programming skill |
 | HTTP service | Axum and Tokio |
@@ -36,7 +38,7 @@ The following local repositories are the requested guidance. Read the relevant s
 | --- | --- | --- |
 | Project tracking | [Beads](../.agents/skills/beads/skills/beads/SKILL.md) | Persistent tasks, dependencies, decisions requiring work, and progress through the `bd` CLI |
 | TypeScript workflows | [Effect functional programming](../.agents/skills/effect-fp/SKILL.md) | Typed errors, boundary decoding, immutable domain data, injected services, and managed workflows |
-| UI components | [Lit web apps](../.agents/skills/lit-web-apps/SKILL.md) | Pure Lit components, strict TypeScript, routing, rendering, and browser tests |
+| Historical UI guidance | [Lit web apps](../.agents/skills/lit-web-apps/SKILL.md) | Retained original skill; Gyral release guidance now governs components |
 | CSS | [Modern CSS](../.agents/skills/modern-css/SKILL.md) | Tokens, layers, responsive layouts, themes, accessible interactions, and progressive enhancement |
 | HTML | [Semantic HTML](../.agents/skills/semantic-html/SKILL.md) | Meaningful elements, native controls, labels, landmarks, reading order, and accessibility |
 | Search visibility | [Google SEO](../.agents/skills/google-seo/SKILL.md) | Search behavior for routes deliberately intended for public discovery |
@@ -53,11 +55,13 @@ An update tool will check configured upstream repositories for new releases. Sou
 
 The selected update mechanism is a manual command. Updates must not silently replace the project's instructions. Checking for updates reports available revisions without changing the copied files; explicitly applying a selected update produces a reviewable change and updates the manifest alongside the copied files. The mechanism must work without a scheduled workflow. Automatic update pull requests are not part of the selected first version.
 
+The owner-selected Gyral renderer supersedes Lit-specific implementation examples. The pinned Lit skill remains as historical guidance and attribution; apply the matching Gyral skill and references from the vendored `@gyral/mcp` corpus for framework APIs.
+
 ## How the skills work together
 
-The requested styled, interactive app takes precedence over the semantic HTML skill's default restriction to static pages without CSS or JavaScript. Apply its element selection and accessibility guidance within Lit templates. Use the modern CSS skill for presentation and Lit for interaction. The semantic HTML repository calls its guidance file `skills.md`, rather than `SKILL.md`.
+The requested styled, interactive app takes precedence over the semantic HTML skill's default restriction to static pages without CSS or JavaScript. Apply its element selection and accessibility guidance within Gyral templates. Use the modern CSS skill for presentation and Gyral for interaction. The semantic HTML repository calls its guidance file `skills.md`, rather than `SKILL.md`.
 
-Effect governs TypeScript services and fallible workflows. Lit governs component lifecycle, reactive properties, rendering, and DOM events. A small adapter at the application boundary will connect the managed Effect runtime to Lit's asynchronous data APIs. Domain and service code will not scatter runtime execution or introduce a second competing application state system. The adapter design is specified in the frontend architecture document.
+Effect governs TypeScript services and fallible workflows. Gyral governs component lifecycle, state reducers, rendering, and native event intents. Named drivers connect command data to the managed Effect runtime adapter. Domain and service code will not scatter runtime execution or introduce a second competing application state system. The adapter design is specified in the frontend architecture document.
 
 Use Google SEO guidance to decide search behavior; semantic HTML provides the document structure. Examples in a skill do not create requirements for languages the app does not support, fixed metadata character counts, or structured data unrelated to the page's content.
 
@@ -82,13 +86,13 @@ The core tooling below is selected by the owner. Supporting defaults are specifi
 | Concern | Choice | Status | Reason |
 | --- | --- | --- | --- |
 | Repository layout | `apps/web`, a Rust workspace under `crates`, and focused `docs` in the confirmed single repository | Specified in scaffold | Keep the frontend, backend, contracts, and documentation reviewable together |
-| Frontend tooling | pnpm, Vite, strict TypeScript, and Lit | Selected | Follow the requested UI skills without adding a second frontend framework |
+| Frontend tooling | pnpm, Vite, strict TypeScript, and Gyral | Selected | Follow the requested UI skills without adding a second frontend framework |
 | TypeScript workflows | Effect's stable 3.x line, with compatible companion packages | Required by the requested skill | Verify and pin compatible versions during setup |
 | Rust tooling | Edition 2024, an exact supported stable compiler, rustfmt, and Clippy | Required by the requested skill | Make local and CI environments consistent |
 | HTTP service | Axum and Tokio | Selected | Use the Rust skill's HTTP application shape |
 | Database access | SQLx's SQLite driver with versioned migrations | Selected | Use the selected database through the Rust skill's repository interfaces |
 | API contract | JSON HTTP API described by a checked-in OpenAPI contract | Selected | Make Rust and TypeScript boundary shapes explicit and detect drift |
-| Rendering | Client rendering for interactive routes; build-time rendering for the landing page | Specified in architecture | Fit the Lit skill's rendering modes while keeping the production business service in Rust |
+| Rendering | Client rendering for interactive routes; build-time rendering for the landing page | Specified in architecture | Generate static landing HTML with Gyral SSR while keeping the production business service in Rust |
 | Local services | Separate local Compose setup with the application, SQLite, and a compatible test email API | Specified in scaffold | Exercise the production database and inspect email without contacting coaches |
 | Background delivery | A durable SQLite outbox processed by a background task in the Rust application | Specified in architecture | Commit schedule changes independently of email endpoint availability and retry delivery safely |
 | Verification | `pnpm run ci` on a contributor's machine; GitHub Actions disabled | Selected by owner | Run the full checks, tests, and builds locally without hosted jobs |
@@ -99,7 +103,7 @@ Axum's [official documentation](https://docs.rs/axum/latest/axum/) describes its
 
 Avoid copying version numbers blindly from example scaffolds. Resolve the required skill constraints against current official package documentation and the deployment environment, then pin compatible versions and commit lockfiles.
 
-The specified rendering model does not require a JavaScript server in production. Dynamic parent team webpages load the current schedule from the Rust service; calendar subscriptions come directly from the Rust service. A future requirement to server-render live Lit components would call for a separate JavaScript rendering service and an explicit architecture change.
+The specified rendering model does not require a JavaScript server in production. Dynamic parent team webpages load the current schedule from the Rust service; calendar subscriptions come directly from the Rust service. A future requirement to server-render live Gyral components would call for a separate JavaScript rendering service and an explicit architecture change.
 
 ## Email OTP and delivery
 

@@ -1,4 +1,12 @@
-import { html } from "lit";
+import { defineHook, html } from "@gyral/core";
+const select = (event: Event) => {
+  if (event.currentTarget instanceof HTMLInputElement)
+    event.currentTarget.select();
+};
+const selectOnFocus = defineHook({
+  client: (element) => element.addEventListener("focus", select),
+  dispose: (element) => element.removeEventListener("focus", select),
+});
 export const parentGuide = (calendarURL: string) =>
   html`<details class="parent-help">
     <summary>New to this team calendar?</summary>
@@ -16,11 +24,8 @@ export const parentGuide = (calendarURL: string) =>
       <label
         >Calendar subscription URL<input
           readonly
-          .value=${calendarURL}
-          @focus=${(event: FocusEvent) => {
-            if (event.currentTarget instanceof HTMLInputElement)
-              event.currentTarget.select();
-          }}
+          value=${calendarURL}
+          ${selectOnFocus()}
       /></label>
       <details>
         <summary>iPhone and Apple Calendar</summary>

@@ -7,11 +7,12 @@ Gymtime schedules access to one basketball gym. Email-code sign-in, invitations,
 - [Workflow walkthrough](docs/workflows.md): setup and testing from each role.
 - [Product requirements](docs/requirements.md): roles, scheduling rules, notifications, and acceptance scenarios.
 - [Architecture](ARCHITECTURE.md): Rust layers, transactions, authentication, calendars, and deployment.
-- [Frontend architecture](docs/frontend.md): Lit, Effect, state, accessibility, and browser verification.
+- [Frontend architecture](docs/frontend.md): Gyral, Effect, state, accessibility, and browser verification.
 - [Scaffold specification](docs/scaffold.md): foundation files, commands, toolchain, skills, and scaffold acceptance.
 - [Engineering decisions](docs/engineering.md): owner-selected stack and skill sources.
 - [Local development](docs/development.md) and [VPS operation](docs/deployment.md): setup, verification, and recovery.
 - [Harness reference](docs/references/openai-harness-engineer.md): repository knowledge and feedback approach.
+- [Gyral frontend rewrite](docs/gyral-rewrite.md): requested prerelease, reference conventions, migration boundaries, and approved frontend scope.
 
 ## Track work in Beads
 
@@ -23,13 +24,13 @@ Beads state is local and excluded from Git. Initialize your own local tracker wh
 
 Read the applicable entrypoints and references linked in [Engineering decisions](docs/engineering.md). They resolve to pinned copies under `.agents/skills`, with provenance and hashes in `skills.lock.json`. Apply updates explicitly; do not edit copied instructions in place.
 
-Follow [Writing conventions](docs/writing.md) for project documents and product writing. Use the Rust skill for backend work, and the Effect, Lit, modern CSS, semantic HTML, and Google SEO skills for their respective frontend concerns. User requirements take precedence over skill examples. Documented interpretations resolve styled Lit semantics, SQLite, and test-version compatibility.
+Follow [Writing conventions](docs/writing.md) for project documents and product writing. Use the Rust skill for backend work, and the Effect, modern CSS, semantic HTML, and Google SEO skills for their respective frontend concerns. User requirements take precedence over skill examples. The owner-selected Gyral renderer supersedes the retained Lit skill. Read the matching Gyral guidance from the vendored `@gyral/mcp` archive. Documented interpretations resolve styled semantics, SQLite, and test-version compatibility.
 
 ## Preserve the boundaries
 
 Rust owns permissions and every schedule mutation. The pure domain has no driver or framework dependencies. The app owns transactions through ports; only the server wires infrastructure. Check and write conflicting bookings in one SQLite write transaction.
 
-Lit owns rendering and component lifecycle. Effect owns typed workflows and injected services. Execute them through one browser runtime adapter. Parent DTOs, pages, and feeds omit internal notes and pending requests.
+Gyral owns rendering, reducers, intents, commands, and component lifecycle. Effect owns typed workflows and injected services. Execute them through one browser runtime adapter. Parent DTOs, pages, and feeds omit internal notes and pending requests.
 
 ## Verify and report accurately
 

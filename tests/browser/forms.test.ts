@@ -1,56 +1,72 @@
+import { define, html, settled, type PropsOf } from "@gyral/core";
 import { afterEach, expect, it } from "vitest";
-import { LitElement, html } from "lit";
-import { FormErrors } from "../../apps/web/src/components/form-errors.js";
-import { Revalidate } from "../../apps/web/src/components/revalidate.js";
-
-class FormFixture extends LitElement {
-  issues: ReadonlyArray<{field:string;message:string}> = [];
-  refreshes = 0;
-  private readonly errors = new FormErrors(this, () => this.issues);
-  private readonly revalidate = new Revalidate(this, () => { this.refreshes += 1; });
-  override render() {
-    return html`<form @submit=${(event:SubmitEvent) => {event.preventDefault();this.errors.remember(event);}}>
-      <label>Reason<input name="reason" aria-describedby="help"></label>
-      <p id="help">Explain the competing request.</p><button>Submit</button>
-    </form>`;
-  }
-}
-customElements.define("gymtime-form-fixture", FormFixture);
+import { formErrors } from "../../apps/web/src/components/form-errors.js";
+import { issuesProp } from "../../apps/web/src/components/props.js";
+import { revalidate } from "../../apps/web/src/runtime/commands.js";
+const props = { issues: issuesProp() };
+const Fixture = define<
+  { readonly refreshes: number },
+  { readonly _tag: "Refresh" },
+  PropsOf<typeof props>
+>()("gymtime-form-fixture", {
+  props,
+  init: () => ({ refreshes: 0 }),
+  subscriptions: () => [revalidate({ _tag: "Refresh" })],
+  update: { Refresh: (s) => ({ refreshes: s.refreshes + 1 }) },
+  view: (s, _i, { props: p }) =>
+    html`<form ${formErrors(p.issues)}>
+        <label>Reason<input name="reason" aria-describedby="help" /></label>
+        <p id="help">Explain the competing request.</p>
+      </form>
+      <output>${s.refreshes}</output>`,
+});
 afterEach(() => document.body.replaceChildren());
-
-it("associates server errors with the submitted field, preserves help, and clears them on correction", async () => {
-  const host = document.createElement("gymtime-form-fixture");
+it("associates server errors with a field, preserves help, and clears them on correction", async () => {
+  const host = new Fixture();
   document.body.append(host);
-  await host.updateComplete;
-  const form = host.shadowRoot?.querySelector("form");
+  await settled();
   const input = host.shadowRoot?.querySelector("input");
-  expect(form).toBeTruthy();expect(input).toBeTruthy();
-  form?.dispatchEvent(new SubmitEvent("submit", {bubbles:true,cancelable:true}));
-  host.issues = [{field:"reason",message:"Include a reason."}];
-  host.requestUpdate();await host.updateComplete;
+  expect(input).toBeTruthy();
+  host.issues = [
+    { field: "reason", message: "Include a reason." },
+    { field: "reason", message: "Explain the conflict." },
+  ];
+  await settled();
   expect(input?.getAttribute("aria-invalid")).toBe("true");
-  expect(input?.validationMessage).toBe("Include a reason.");
+  expect(input?.validationMessage).toBe(
+    "Include a reason. Explain the conflict.",
+  );
   const ids = input?.getAttribute("aria-describedby")?.split(" ") ?? [];
   expect(ids).toContain("help");
-  expect(ids.some(id=>host.shadowRoot?.getElementById(id)?.textContent==="Include a reason.")).toBe(true);
-  input?.dispatchEvent(new Event("input", {bubbles:true,composed:true}));
+  expect(
+    ids.some(
+      (id) =>
+        host.shadowRoot?.getElementById(id)?.textContent === "Include a reason. Explain the conflict.",
+    ),
+  ).toBe(true);
+  input?.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   expect(input?.validationMessage).toBe("");
   expect(input?.getAttribute("aria-describedby")).toBe("help");
   expect(host.shadowRoot?.querySelector(".field-error")).toBeNull();
-  host.requestUpdate();await host.updateComplete;
+  host.send({ _tag: "Refresh" });
+  await settled();
   expect(input?.validationMessage).toBe("");
   expect(input?.getAttribute("aria-describedby")).toBe("help");
 });
-
-it("revalidates on return and stops listening after the component disconnects", async () => {
-  const host = document.createElement("gymtime-form-fixture");
-  document.body.append(host);await host.updateComplete;
-  const before = host.refreshes;
+it("revalidates on return and stops listening after disconnect", async () => {
+  const host = new Fixture();
+  document.body.append(host);
+  await settled();
+  const count = () =>
+    Number(host.shadowRoot?.querySelector("output")?.textContent);
+  const before = count();
   window.dispatchEvent(new Event("focus"));
-  expect(host.refreshes).toBe(before+1);
-  host.remove();const disconnected = host.refreshes;
+  await settled();
+  expect(count()).toBe(before + 1);
+  host.remove();
+  const disconnected = count();
   window.dispatchEvent(new Event("focus"));
   document.dispatchEvent(new Event("visibilitychange"));
-  expect(host.refreshes).toBe(disconnected);
+  await settled();
+  expect(count()).toBe(disconnected);
 });
-declare global {interface HTMLElementTagNameMap {"gymtime-form-fixture":FormFixture}}

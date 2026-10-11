@@ -19,3 +19,5 @@ Skill content is copied without project-specific edits. The semantic HTML source
 CC BY 4.0 material remains available under the [Creative Commons Attribution 4.0 International license](https://creativecommons.org/licenses/by/4.0/). Preserve source credit, license references, and an indication of changes when redistributing adaptations.
 
 Rust and JavaScript dependencies and container base images retain their respective licenses. Lockfiles record dependencies; [deny.toml](deny.toml) defines the Rust dependency license policy. Refer to each dependency's own source for its copyright and license terms.
+
+The [vendored Gyral 0.3.1-next.9 release](vendor/gyral/0.3.1-next.9/README.md) retains the unchanged upstream package archives and notices from [gyraljs/gyral](https://github.com/gyraljs/gyral), by Mike Zupper. Their package manifests declare MIT licensing. Release provenance and checksums are stored with the archives. Core, SSR, and testing are installed application or verification dependencies; the remaining archives are optional release artifacts.

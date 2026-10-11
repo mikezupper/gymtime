@@ -5,19 +5,16 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build && tsx scripts/prerender.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "gyral-types && tsc --noEmit"
   },
   "dependencies": {
-    "lit": "3.3.3",
     "effect": "3.22.2",
-    "@lit/context": "1.1.6",
-    "@lit/task": "1.0.3",
-    "@lit-labs/signals": "0.3.0",
-    "@gymtime/contracts": "workspace:*"
+    "@gymtime/contracts": "workspace:*",
+    "@gyral/core": "file:../../vendor/gyral/0.3.1-next.9/gyral-core-0.3.1-next.9.tgz"
   },
   "devDependencies": {
     "vite": "8.3.2",
-    "@lit-labs/ssr": "4.1.0"
+    "@gyral/ssr": "file:../../vendor/gyral/0.3.1-next.9/gyral-ssr-0.3.1-next.9.tgz"
   },
   "license": "MIT",
   "repository": {

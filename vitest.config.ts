@@ -1,20 +1,19 @@
 import { defineConfig } from "vitest/config";
+import { gyralVitePreset } from "@gyral/core/vite";
 import { playwright } from "@vitest/browser-playwright";
 
 export default defineConfig({
-  optimizeDeps: {
-    include: [
-      "effect",
-      "lit",
-      "lit/directives/style-map.js",
-      "lit/directives/repeat.js",
-      "@lit/context",
-      "@lit/task",
-    ],
-  },
   test: {
     projects: [
       {
+        ...gyralVitePreset({
+          clientOnly: true,
+          types: {
+            dirs: ["apps/web/src"],
+            out: "apps/web/.gyral/elements.d.ts",
+          },
+          optimize: ["effect"],
+        }),
         test: {
           name: "unit",
           include: ["tests/unit/**/*.test.ts"],
@@ -22,6 +21,14 @@ export default defineConfig({
         },
       },
       {
+        ...gyralVitePreset({
+          clientOnly: true,
+          types: {
+            dirs: ["apps/web/src"],
+            out: "apps/web/.gyral/elements.d.ts",
+          },
+          optimize: ["effect"],
+        }),
         test: {
           name: "browser",
           include: ["tests/browser/**/*.test.ts"],

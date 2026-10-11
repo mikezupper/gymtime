@@ -21,7 +21,8 @@
     "skills:update": "tsx tools/skills.ts update",
     "docs:check": "tsx tools/check.ts docs",
     "architecture:check": "tsx tools/check.ts architecture",
-    "schema:generate": "tsx tools/schema.ts generate"
+    "schema:generate": "tsx tools/schema.ts generate",
+    "vendor:check": "tsx tools/check.ts vendor"
   },
   "devDependencies": {
     "@effect/language-service": "0.87.3",
@@ -34,17 +35,15 @@
     "tsx": "4.23.15",
     "eslint": "10.11.0",
     "typescript-eslint": "8.71.0",
-    "eslint-plugin-lit": "2.3.1",
-    "eslint-plugin-wc": "3.1.0",
-    "lit-analyzer": "2.0.3",
-    "ts-lit-plugin": "2.0.2",
     "openapi-typescript": "7.13.0",
     "@effect/platform": "0.97.2",
     "@effect/platform-node": "0.108.2",
     "effect": "3.22.2",
     "@axe-core/playwright": "4.13.0",
-    "lit": "3.3.3",
-    "@gymtime/contracts": "workspace:*"
+    "@gymtime/contracts": "workspace:*",
+    "@gyral/core": "file:vendor/gyral/0.3.1-next.9/gyral-core-0.3.1-next.9.tgz",
+    "@gyral/testing": "file:vendor/gyral/0.3.1-next.9/gyral-testing-0.3.1-next.9.tgz",
+    "parse5": "8.0.1"
   },
   "license": "MIT",
   "repository": {

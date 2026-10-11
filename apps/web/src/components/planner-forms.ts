@@ -1,30 +1,15 @@
-import "./gymtime-help-tip.js";
-import { html } from "lit";
-import type { ScheduleAction, Schedule, Slot } from "../domain/schedule.js";
+import { html, outputs } from "@gyral/core";
+import type { Schedule, ScheduleAction, Slot } from "../domain/schedule.js";
 import { dateLabel, spaceLabel } from "../domain/schedule.js";
-export type ActionEvent = CustomEvent<{
+import "./gymtime-help-tip.js";
+export type ScheduleOutput = {
+  readonly _tag: "ScheduleAction";
   readonly action: ScheduleAction;
   readonly confirmation?: string;
   readonly preview?: boolean;
-}>;
-export const emitAction = (
-  host: HTMLElement,
-  action: ScheduleAction,
-  options: { readonly confirmation?: string; readonly preview?: boolean } = {},
-) =>
-  host.dispatchEvent(
-    new CustomEvent("schedule-action", {
-      detail: { action, ...options },
-      bubbles: true,
-      composed: true,
-    }),
-  );
-export const formValues = (event: SubmitEvent): FormData | undefined => {
-  event.preventDefault();
-  return event.currentTarget instanceof HTMLFormElement
-    ? new FormData(event.currentTarget)
-    : undefined;
+  readonly formKey?: string;
 };
+export const emitSchedule = outputs<ScheduleOutput>();
 export const text = (form: FormData, key: string): string =>
   String(form.get(key) ?? "");
 export const number = (form: FormData, key: string): number =>
@@ -40,11 +25,9 @@ export const activityField = (value = "practice") =>
   >`;
 export const noteField = (value = "") =>
   html`<label
-      >Internal note (optional)<textarea
-        name="note"
-        maxlength="2000"
-        .value=${value}
-      ></textarea>
+      >Internal note (optional)<textarea name="note" maxlength="2000">
+${value}</textarea
+      >
     </label>
     <p class="small muted">Only organizers and coaches can see this note.</p>`;
 export const spaceField = (split: boolean, value = "full") =>
@@ -63,7 +46,7 @@ export const spaceField = (split: boolean, value = "full") =>
   >`;
 export const scopeField = (series: string | null, value = "one") =>
   html`<label
-      >Dates to change<select name="scope" .value=${value}>
+      >Dates to change<select name="scope" value=${value}>
         <option value="one">This date</option>
         ${series
           ? html`<option value="future">This date and future dates</option>

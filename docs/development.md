@@ -1,6 +1,6 @@
 # Local development
 
-The app serves a static landing page and a Lit workspace connected to Rust and SQLite. Invited users can sign in with emailed codes. Organizers can invite and disable accounts. Organizers manage seasons, teams, slots, and closures. Primary coaches request, change, cancel, and swap bookings; parents use shared calendars. Follow the [role walkthrough](workflows.md) to try these features.
+The app serves a static landing page and a Gyral workspace connected to Rust and SQLite. Invited users can sign in with emailed codes. Organizers can invite and disable accounts. Organizers manage seasons, teams, slots, and closures. Primary coaches request, change, cancel, and swap bookings; parents use shared calendars. Follow the [role walkthrough](workflows.md) to try these features.
 
 ## Install and run
 
@@ -40,7 +40,9 @@ pnpm test:e2e
 pnpm build
 ```
 
-`check` includes TypeScript, ESLint, strict Lit template analysis, Rust formatting and Clippy, dependency advisories and licenses, crate/import boundaries, generated contracts, migration documentation, documentation links, command names, example configuration names, and copied skill hashes. `test:unit` runs Vitest, Rust nextest, and Rust doctests. Browser tests use Chromium and WebKit. End-to-end tests start a separate Rust service on port 3817 and a local email sandbox on port 8827. Each run uses a fresh `.local/e2e-<process-id>.db`, separate from development data.
+`check` includes TypeScript, ESLint, generated Gyral element types and template lint, Rust formatting and Clippy, dependency advisories and licenses, crate/import boundaries, generated contracts, migration documentation, documentation links, command names, example configuration names, and copied skill hashes. `test:unit` runs Vitest, Rust nextest, and Rust doctests. Browser tests use Chromium and WebKit. End-to-end tests start a separate Rust service on port 3817 and a local email sandbox on port 8827. Each run uses a fresh `.local/e2e-<process-id>.db`, separate from development data.
+
+`pnpm vendor:check` uses `sha256sum` to verify the supplied [Gyral prerelease artifacts](../vendor/gyral/0.3.1-next.9/README.md). It is included in `pnpm check`, and Docker verifies the same manifest before dependency installation. Core, SSR, and testing use exact local `file:` dependencies. The [Gyral design](gyral-rewrite.md) describes the approved frontend migration. Production builds compile Gyral templates.
 
 After changing API DTOs, run `pnpm contract:generate`. After changing migrations, run `pnpm schema:generate`. Review the generated files with their sources. The application uses runtime SQLx queries and therefore needs no `.sqlx` offline metadata.
 

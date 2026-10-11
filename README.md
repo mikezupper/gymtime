@@ -6,7 +6,7 @@
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen)](CONTRIBUTING.md)
 [![Rust](https://img.shields.io/badge/Rust-1.99.0-000000?logo=rust)](rust-toolchain.toml)
 [![Node.js](https://img.shields.io/badge/Node.js-24.21.0-339933?logo=nodedotjs&logoColor=white)](.node-version)
-[![Lit](https://img.shields.io/badge/UI-Lit-324FFF?logo=lit&logoColor=white)](apps/web/package.json)
+[![Gyral](https://img.shields.io/badge/UI-Gyral_0.3.1--next.9-324FFF)](apps/web/package.json)
 [![Docker Compose](https://img.shields.io/badge/deployment-Docker_Compose-2496ED?logo=docker&logoColor=white)](compose.yaml)
 
 Gymtime helps a school or local gym organizer plan a season of basketball gym access. Organizers publish available time, coaches request slots, and families follow their team's confirmed schedule.
@@ -30,6 +30,8 @@ It manages access to a gym. It does not generate opponents, league schedules, or
 - Organizer onboarding, permission-aware coach guides, parent subscription instructions, contextual help, and mobile and dark-mode views.
 
 This is an early, pre-1.0 project. Automated checks cover Chromium and WebKit, SQLite transactions, and public-calendar privacy. See [verification evidence and limits](docs/verification.md). Production deployment, live email delivery, and real calendar-provider refresh behavior need validation in your environment.
+
+The [Gyral frontend rewrite](docs/gyral-rewrite.md) uses exact vendored `0.3.1-next.9` [release packages](vendor/gyral/0.3.1-next.9/README.md), with Effect workflows and the existing Rust/SQLite backend.
 
 Two independent schools can run separate instances with their own databases, hostnames, and configuration. The application has no school switcher or shared multi-school tenancy. Separate instances behind one Traefik proxy also need unique router and service label names.
 
@@ -102,13 +104,14 @@ With Docker available, `pnpm run ci` runs all five commands above and builds the
 | Command | Result |
 | --- | --- |
 | `pnpm run ci` | Full local verification, native build, and production container build; requires Docker |
-| `pnpm check` | TypeScript, ESLint, strict Lit templates, Rust formatting/Clippy, dependency policy, architecture, contracts, migrations, docs, and public skill hashes |
+| `pnpm check` | TypeScript, ESLint, Gyral element types and template lint, Rust formatting/Clippy, dependency policy, architecture, contracts, migrations, docs, and public skill hashes |
 | `pnpm test:unit` | Vitest, Rust nextest, and Rust doctests |
 | `pnpm test:browser` | Real custom-element tests in Chromium and WebKit |
 | `pnpm test:e2e` | Full-stack browser tests with fresh SQLite and a local email sandbox |
 | `pnpm build` | Generated contracts, frontend assets, and `target/debug/gymtime-server` |
 | `pnpm contract:generate` / `pnpm schema:generate` | Regenerate API types or migration documentation after changing their sources |
 | `pnpm docs:check` / `pnpm architecture:check` | Focused documentation or boundary checks |
+| `pnpm vendor:check` | Verify the unchanged Gyral release archives and provenance; included in `check` and Docker |
 
 The Docker build creates the optimized Rust release binary and packages it with frontend assets. Node is a build dependency and is absent from the application runtime image. Local database and browser reports remain ignored. Dependency updates are selected manually, reviewed against the pinned stack, and verified locally before merging. GitHub security alerts and secret-scanning protection remain enabled.
 
@@ -131,7 +134,7 @@ Use [VPS operation](docs/deployment.md) for proxy configuration, backups, restor
 
 ## Architecture
 
-Gymtime is one repository with a Rust service, a Lit frontend, generated contracts, and project documentation.
+Gymtime is one repository with a Rust service, a Gyral frontend, generated contracts, and project documentation.
 
 | Area | Ownership |
 | --- | --- |
@@ -140,7 +143,7 @@ Gymtime is one repository with a Rust service, a Lit frontend, generated contrac
 | `crates/infra` | SQLite persistence, authentication infrastructure, email, and outbox delivery |
 | `crates/api` | Axum routes, boundary DTOs, validation, errors, and OpenAPI annotations |
 | `crates/server` | Configuration, migrations, dependency wiring, assets, readiness, and shutdown |
-| `apps/web` | Lit rendering and lifecycle; Effect workflows, decoding, and one browser runtime adapter |
+| `apps/web` | Gyral rendering, reducers, and lifecycle; Effect workflows, decoding, and one browser runtime adapter |
 | `contracts` / `packages/contracts` | Generated OpenAPI and TypeScript transport types |
 | `docs` | Requirements, design decisions, role workflows, operation, and verification evidence |
 

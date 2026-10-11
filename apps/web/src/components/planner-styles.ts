@@ -1,4 +1,4 @@
-import { css } from "lit";
+import { css } from "@gyral/core";
 export const plannerStyles = css`
   :host {
     display: block;

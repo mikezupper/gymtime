@@ -1,8 +1,8 @@
 # Gymtime Architecture
 
-Gymtime will run as one Rust application behind the owner's existing Traefik proxy. It will serve the JSON API, public calendar feeds, static landing page, and Lit frontend assets. SQLite will hold the schedule and account data on a persistent local volume. Email delivery will use the configured Resend-compatible endpoint.
+Gymtime will run as one Rust application behind the owner's existing Traefik proxy. It will serve the JSON API, public calendar feeds, static landing page, and Gyral frontend assets. SQLite will hold the schedule and account data on a persistent local volume. Email delivery will use the configured Resend-compatible endpoint.
 
-This is the architecture specification for the first version. It makes the reviewed requirements concrete for implementation; the application described here has not been built. Product behavior comes from [Requirements](docs/requirements.md), and the owner's stack choices come from [Engineering decisions](docs/engineering.md).
+This describes the implemented first version. Product behavior comes from [Requirements](docs/requirements.md), the owner's stack choices come from [Engineering decisions](docs/engineering.md), and tested behavior and release limits are recorded in [Verification](docs/verification.md). The owner approved the [Gyral frontend rewrite](docs/gyral-rewrite.md) while retaining Rust and SQLite.
 
 ## Runtime boundaries
 
@@ -17,7 +17,7 @@ flowchart LR
 
 The browser owns presentation and request state. Rust owns authorization and every schedule mutation. SQLite persists decisions, and a background task delivers committed notifications. Node is needed for frontend builds and development, not for the production application process.
 
-The landing page is generated at build time through Lit's server rendering tools. It contains readable HTML and working sign-in navigation without JavaScript. Authenticated screens and shared team webpages render on the client. Parent subscription feeds are server responses and do not require browser JavaScript. See [Frontend architecture](docs/frontend.md) for the Lit and Effect boundary.
+The landing page is generated at build time through `@gyral/ssr`. It contains readable HTML and working sign-in navigation without JavaScript. Authenticated screens and shared team webpages render on the client. Parent subscription feeds are server responses and do not require browser JavaScript. See [Frontend architecture](docs/frontend.md) for the Gyral and Effect boundary.
 
 Production uses one application instance. Supporting multiple concurrent HTTP requests does not require multiple database writers or application replicas.
 

@@ -9,11 +9,6 @@ import { checkSkills, manifest } from "./skills.js";
 const Cargo = Schema.Struct({ packages: Schema.Array(Schema.Struct({ name: Schema.String,
   dependencies: Schema.Array(Schema.Struct({ name: Schema.String, kind: Schema.NullOr(Schema.String), uses_default_features: Schema.Boolean, features: Schema.Array(Schema.String) })) })) });
 
-export const vendor = Effect.gen(function* () {
-  const output = yield* command("sha256sum", ["--strict", "--check", "SHA256SUMS"], "vendor/gyral/0.3.1-next.9");
-  yield* Effect.log(output.trim());
-});
-
 export const architecture = Effect.gen(function* () {
   const metadata = yield* command("cargo", ["metadata", "--no-deps", "--format-version", "1", "--locked"]).pipe(Effect.flatMap(Schema.decodeUnknown(Schema.parseJson(Cargo))));
   const allowed: Readonly<Record<string, ReadonlyArray<string>>> = {
@@ -46,7 +41,7 @@ export const architecture = Effect.gen(function* () {
 
 export const docs = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const files = ["README.md", "AGENTS.md", "ARCHITECTURE.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md", "SUPPORT.md", "THIRD_PARTY_NOTICES.md", "CHANGELOG.md", ...(yield* walk("docs")).filter((file) => file.endsWith(".md")), ...(yield* walk("vendor")).filter((file) => file.endsWith(".md"))];
+  const files = ["README.md", "AGENTS.md", "ARCHITECTURE.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md", "SUPPORT.md", "THIRD_PARTY_NOTICES.md", "CHANGELOG.md", ...(yield* walk("docs")).filter((file) => file.endsWith(".md"))];
   let count = 0;
   for (const path of files) {
     const text = yield* read(path);
@@ -74,7 +69,6 @@ export const docs = Effect.gen(function* () {
 });
 
 const all = Effect.gen(function* () {
-  yield* vendor;
   for (const [binary, args] of [
     ["pnpm", ["exec", "gyral-types", "--root", "apps/web"]],
     ["pnpm", ["exec", "tsc", "--noEmit"]],
@@ -95,4 +89,4 @@ const all = Effect.gen(function* () {
   yield* checkSkills(false);
 });
 
-if (isMain(import.meta.url)) run(process.argv.at(2) === "docs" ? docs : process.argv.at(2) === "architecture" ? architecture : process.argv.at(2) === "vendor" ? vendor : all);
+if (isMain(import.meta.url)) run(process.argv.at(2) === "docs" ? docs : process.argv.at(2) === "architecture" ? architecture : all);

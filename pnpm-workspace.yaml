@@ -3,10 +3,11 @@ packages:
   - packages/*
 minimumReleaseAgeExclude:
   - '@types/node@24.19.1'
+  # Owner-approved stable release; retain the age gate for other versions.
+  - '@gyral/core@0.3.1'
+  - '@gyral/ssr@0.3.1'
+  - '@gyral/testing@0.3.1'
 allowBuilds:
   esbuild: true
   "@parcel/watcher": false
   msgpackr-extract: false
-
-overrides:
-  "@gyral/core": file:vendor/gyral/0.3.1-next.9/gyral-core-0.3.1-next.9.tgz

@@ -4,7 +4,7 @@ Gymtime uses a Gyral and TypeScript frontend and a Rust backend with SQLite. It 
 
 This document records the project owner's engineering requirements and their interpretation for the scaffold. It is for the owner and future contributors. Product behavior is defined in [Gymtime requirements](requirements.md); supporting designs are specified in [Architecture](../ARCHITECTURE.md), [Frontend architecture](frontend.md), and [Scaffold specification](scaffold.md). The foundation, OTP, scheduling, notifications, and parent calendars are implemented. [Verification](verification.md) records local test evidence and release limits.
 
-On October 10, 2026, the owner requested a rewrite using Gyral `0.3.1-next.9` and conventions from the Sabacc and starwars.run reference projects. The [rewrite review](gyral-rewrite.md) records the approved frontend scope with the existing Rust/SQLite backend. The exact release is [vendored](../vendor/gyral/0.3.1-next.9/README.md), with checksum checks in local verification and Docker. The tables below describe the resulting implementation.
+On October 10, 2026, the owner requested a rewrite using Gyral `0.3.1-next.9` and conventions from the Sabacc and starwars.run reference projects. On October 11, the owner requested the published npm `0.3.1` release and removal of the tarballs. The [rewrite review](gyral-rewrite.md) records the approved frontend scope with the existing Rust/SQLite backend. Core, SSR, and testing now use exact stable registry versions and lockfile integrity hashes. The tables below describe the resulting implementation.
 
 ## Confirmed stack and workflow
 
@@ -55,7 +55,7 @@ An update tool will check configured upstream repositories for new releases. Sou
 
 The selected update mechanism is a manual command. Updates must not silently replace the project's instructions. Checking for updates reports available revisions without changing the copied files; explicitly applying a selected update produces a reviewable change and updates the manifest alongside the copied files. The mechanism must work without a scheduled workflow. Automatic update pull requests are not part of the selected first version.
 
-The owner-selected Gyral renderer supersedes Lit-specific implementation examples. The pinned Lit skill remains as historical guidance and attribution; apply the matching Gyral skill and references from the vendored `@gyral/mcp` corpus for framework APIs.
+The owner-selected Gyral renderer supersedes Lit-specific implementation examples. The pinned Lit skill remains as historical guidance and attribution; apply the matching Gyral skill and references from the npm `@gyral/mcp@0.3.1` corpus for framework APIs. Its archive contains `package/dist/corpus.json`, including the skill and references. Consult the [versioned release documentation](https://github.com/gyraljs/gyral/tree/v0.3.1/docs) when reading source guidance.
 
 ## How the skills work together
 

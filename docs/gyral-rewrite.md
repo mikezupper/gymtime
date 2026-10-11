@@ -1,7 +1,8 @@
 # Gyral frontend rewrite
 
-The owner requested Gyral `0.3.1-next.9`, vendored from the local release, and
-conventions drawn from `sabacc-game-site` and `starwars.run-site-v2`.
+The owner requested Gyral `0.3.1-next.9`, initially vendored from the local release, and
+conventions drawn from `sabacc-game-site` and `starwars.run-site-v2`. The October 11
+update replaces those archives with the published npm `0.3.1` packages.
 The owner approved replacing the frontend while retaining the Rust API and SQLite database. The application now uses Gyral components, commands, drivers, and landing-page rendering. The existing database schema and backend scheduling authority remain in place.
 
 The audience is the owner and contributors implementing the rewrite. Product
@@ -47,7 +48,7 @@ the interactive application conventions and a readable public landing page.
 | Accessibility | Native forms and dialogs, visible errors, keyboard and focus behavior, light DOM for page landmarks, responsive CSS, and reduced motion |
 | Tracking | Beads alone; keep its local data excluded from Git and retain the current session's Git authorization |
 | Repository knowledge | Short AGENTS.md navigation, focused requirements and designs, pinned references, executable boundaries, and recorded verification limits |
-| Builds | Vendored prerelease artifacts with provenance/checksums, frozen dependency installs, multiple Docker build stages, non-root runtime, health checks, and persistent SQLite |
+| Builds | Exact npm release pins and lockfile integrity hashes, frozen dependency installs, multiple Docker build stages, non-root runtime, health checks, and persistent SQLite |
 | CI | Preserve Gymtime's local verification policy; the two references have different trigger policies, so neither grants authorization to enable hosted runs here |
 | Publication | Keep deployment, registry pushes, and Git publication subject to the current user authorization |
 
@@ -104,18 +105,18 @@ restore compatibility, idempotency receipts, outbox leasing/retry, timezone and
 calendar encoding, and the Rust property/integration tests. Choosing Gyral alone
 does not require replacing these tested mechanisms.
 
-## Release artifacts
+## Release packages
 
-[The vendor directory](../vendor/gyral/0.3.1-next.9/README.md) contains the full
-nine-package release from clean Gyral commit
-`78052c439d697e5d2075bd6a40c6ea8cc257cd6c`. Its unchanged source manifest and
-checksums were verified during this review. Core, SSR, and testing are installed from these archives. Other packages remain optional release artifacts.
+Core, SSR, and testing are pinned to the published npm `0.3.1` release. SSR and
+testing require that same core version, so no local override is needed. The
+lockfile records registry integrity hashes. All nine earlier prerelease archives
+and their vendor metadata have been removed; Docker copies no vendor directory.
+The [dated verification](verification.md) retains the earlier archive evidence.
 
-Use `file:` dependencies for the packages actually
-used, override transitive Gyral core resolution to the same local archive,
-regenerate the pnpm lockfile, and prove a frozen install needs no sibling
-checkout or unpublished npm package. Read the exact package declarations and
-matching Gyral documentation; do not infer APIs from Lit or earlier prereleases.
+Use exact versions for the packages actually used, keep Gyral packages on the
+same release, and verify a frozen install. Read the matching `@gyral/mcp@0.3.1`
+corpus and [migration guidance](https://github.com/gyraljs/gyral/blob/v0.3.1/docs/references/migrating-0.3.0-to-0.3.1.md)
+for framework APIs. Do not infer them from Lit or earlier prereleases.
 
 ## Verification boundary
 
@@ -126,7 +127,7 @@ the email sandbox, contract drift checks, Rust transaction tests, architecture
 checks, accessibility checks, native builds, and the Linux amd64 container build.
 
 The migration is complete when all accepted role workflows use Gyral, production
-installs use the exact vendored release, the complete verification gate passes,
+installs use the exact published release, the complete verification gate passes,
 and repository documents describe the resulting architecture. Removing Lit also
 requires removing its controllers, signal/context/task packages, decorators,
 analyzer, lint rules, SSR imports, and old browser test helpers together.

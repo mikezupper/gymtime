@@ -18,7 +18,7 @@ Read the [requirements](docs/requirements.md), [architecture](ARCHITECTURE.md), 
 
 - Rust owns authorization and schedule mutations. Conflict checks and writes belong in the same SQLite write transaction.
 - The domain is pure. App use cases depend on ports; the server wires database, email, HTTP, and other infrastructure.
-- Lit owns rendering and lifecycle. Effect owns typed workflows and injected services, executed through the browser runtime adapter.
+- Gyral owns rendering, reducers, intents, commands, and lifecycle. Effect owns typed workflows and injected services, executed through the browser runtime adapter.
 - Parent pages and feeds expose only confirmed team schedules. They must omit internal notes, coach addresses, and pending requests.
 - Use native controls, semantic HTML, keyboard access, clear names, and responsive CSS. Explain unfamiliar actions in language appropriate to each role.
 

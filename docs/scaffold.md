@@ -30,7 +30,6 @@ crates/server/                 gymtime-server; production wiring and binary
 migrations/                    ordered SQLite migrations
 .sqlx/                         SQLx offline query metadata when macros are used
 tools/                         contract, architecture, docs, and skill tooling
-vendor/gyral/0.3.1-next.9/      unchanged release artifacts for the proposed rewrite
 Dockerfile                     staged frontend and Rust build
 compose.yaml                   production app and external Traefik integration
 compose.dev.yaml               independent local setup with test email API
@@ -43,7 +42,7 @@ The first scaffold serves a generated landing page, the interactive document she
 
 ## Toolchain baseline
 
-The baseline pins were resolved and built on October 2, 2026; the selected Rust maintenance updates were verified on October 4. Lockfiles record the complete dependency graphs. Verification includes the installed compiler, pinned Node runtime, frontend build, Rust checks, and browser tests.
+The baseline pins were resolved and built on October 2, 2026; the selected Rust maintenance updates were verified on October 4, and Gyral moved to the stable npm release on October 11. Lockfiles record the complete dependency graphs. Verification includes the installed compiler, pinned Node runtime, frontend build, Rust checks, and browser tests.
 
 | Tool or dependency | Pin | Selection |
 | --- | --- | --- |
@@ -51,11 +50,11 @@ The baseline pins were resolved and built on October 2, 2026; the selected Rust 
 | pnpm | `12.8.2` | Exact root `packageManager` value |
 | TypeScript | `5.9.3` | Compatible with the selected transport generator |
 | Vite | `8.3.2` | Frontend development and production asset build |
-| `@gyral/core` | `0.3.1-next.9` (vendored) | Components, templates, drivers, Vite, ESLint, and element types |
+| `@gyral/core` | `0.3.1` (npm) | Components, templates, drivers, Vite, ESLint, and element types |
 | Effect | `3.22.2` | The requested skill targets version 3 |
 | `@effect/platform` | `0.97.2` | Companion version whose peer range accepts this Effect version |
 | `@effect/language-service` | `0.87.3` | Effect editor and diagnostic integration |
-| `@gyral/ssr` / `@gyral/testing` | `0.3.1-next.9` (vendored) | Landing rendering and model verification |
+| `@gyral/ssr` / `@gyral/testing` | `0.3.1` (npm) | Landing rendering and model verification |
 | Vitest / `@vitest/browser-playwright` | `4.1.11` / `4.1.11` | Matching browser test runner and provider |
 | Playwright | `1.63.0` | Browser verification |
 | `openapi-typescript` | `7.13.0` | Generated transport declarations |
@@ -86,7 +85,6 @@ These root commands are the scaffold interface.
 | `pnpm dev` | Start Vite and Rust with coordinated shutdown and a same-origin API proxy |
 | `pnpm dev:api` | Start just the Rust service with local configuration |
 | `pnpm check` | Type, template, lint, formatting, Rust lint, architecture, contract, and documentation checks |
-| `pnpm vendor:check` | Verify every vendored Gyral archive and release provenance against the supplied checksums; also included in `check` |
 | `pnpm test:unit` | Pure and service tests, including Rust tests and SQLite integration tests |
 | `pnpm test:browser` | Gyral component tests in real browsers |
 | `pnpm test:e2e` | Full-stack Playwright tests with isolated database and email state |
@@ -164,7 +162,7 @@ Beads was initialized without installing hooks or replacing the custom agent gui
 
 ## Compatibility decisions
 
-ESLint is pinned to 10.11.0 with TypeScript and the vendored Gyral recommended rules. The Gyral Vite preset compiles templates in production builds and generates ignored `.gyral/elements.d.ts` declarations; `check` runs `gyral-types` before TypeScript. Vitest 4 uses hand-written Effect Layers and scoped runtime disposal instead of the incompatible Effect/Vitest 3 integration.
+ESLint is pinned to 10.11.0 with TypeScript and the Gyral recommended rules. The Gyral Vite preset compiles templates in production builds and generates ignored `.gyral/elements.d.ts` declarations; `check` runs `gyral-types` before TypeScript. Vitest 4 uses hand-written Effect Layers and scoped runtime disposal instead of the incompatible Effect/Vitest 3 integration.
 
 The Resend SDK adapter uses the SDK's raw relative `emails` request. Its convenience method uses `/emails` and discards a custom URL path prefix. Integration tests verify a prefixed endpoint, bearer authentication, request fields, a transient failure, and a stable idempotency key. The server constructs this adapter but does not send email until authentication and notification workflows exist.
 

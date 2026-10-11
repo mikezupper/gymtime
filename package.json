@@ -21,8 +21,7 @@
     "skills:update": "tsx tools/skills.ts update",
     "docs:check": "tsx tools/check.ts docs",
     "architecture:check": "tsx tools/check.ts architecture",
-    "schema:generate": "tsx tools/schema.ts generate",
-    "vendor:check": "tsx tools/check.ts vendor"
+    "schema:generate": "tsx tools/schema.ts generate"
   },
   "devDependencies": {
     "@effect/language-service": "0.87.3",
@@ -41,8 +40,8 @@
     "effect": "3.22.2",
     "@axe-core/playwright": "4.13.0",
     "@gymtime/contracts": "workspace:*",
-    "@gyral/core": "file:vendor/gyral/0.3.1-next.9/gyral-core-0.3.1-next.9.tgz",
-    "@gyral/testing": "file:vendor/gyral/0.3.1-next.9/gyral-testing-0.3.1-next.9.tgz",
+    "@gyral/core": "0.3.1",
+    "@gyral/testing": "0.3.1",
     "parse5": "8.0.1"
   },
   "license": "MIT",

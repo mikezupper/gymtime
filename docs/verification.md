@@ -1,5 +1,44 @@
 # Verification
 
+## Published Gyral 0.3.1 migration — October 11, 2026
+
+Core, SSR, and testing now install from npm at exact `0.3.1` versions. The
+lockfile integrity hashes match the registry metadata, and the installed graph
+resolves one core release without an override. All nine prerelease archives and
+vendor metadata are removed, along with Docker copy/checksum steps and the
+`vendor:check` command. The dated records below describe the earlier releases.
+
+`pnpm install --frozen-lockfile` and the complete `pnpm run ci` passed using
+Node 24.21.0, pnpm 12.8.2, and Rust 1.99.0:
+
+| Check | Result |
+| --- | --- |
+| Static and policy checks | Generated element types, TypeScript, Gyral ESLint rules, Rust formatting/Clippy, dependency policy, architecture, contracts, migration documentation, and all seven skill pins passed |
+| TypeScript model and service tests | 17 passed, including the seeded 100-run selection property test and command/retry regressions |
+| Rust tests | 43 nextest tests passed; the doctest command passed with no doctests present |
+| Browser components | 20 Chromium/WebKit cases passed |
+| Full-stack workflows | 16 Chromium/WebKit cases passed against disposable SQLite and the local email sandbox |
+| Builds | Native assets, compiled templates, generated landing HTML, Rust binary, and the Linux amd64 production Docker image passed |
+
+The standalone web typecheck also passed. After the documentation updates,
+`pnpm docs:check` passed. The only lockfile changes replace the three Gyral
+prerelease resolutions with stable registry resolutions. Application source,
+Rust manifests and code, migrations, and generated API contracts did not change.
+
+The new image, `sha256:6c7022ac3c088cb7b5a89ee75c14c2fd0f5c8fbf589036154e0109722a901d23`,
+ran with temporary SQLite storage as UID 10001. Chromium and WebKit passed
+readiness, the generated landing page with JavaScript disabled, production
+sign-in component rendering, and search exclusion, with no console or page
+errors. The temporary container was stopped after the probe; existing local
+databases were not used for these checks.
+
+The [Gymtime Gyral feedback](gyral-feedback.md) records tested integration
+behavior, resolved prerelease distribution concerns, and documentation
+suggestions. This migration found no new Gyral runtime regression in the
+recorded checks. Request-time component SSR and hydration, Firefox, live email,
+real calendar-client refresh, production deployment, and framework-only size or
+performance comparisons were not tested.
+
 ## Gyral frontend rewrite — October 10, 2026
 
 The owner approved the [frontend rewrite](gyral-rewrite.md) with the existing Rust API and SQLite database. All thirteen components now use Gyral `0.3.1-next.9`; the landing page uses Gyral SSR at build time. Lit, its controllers, context/task/signal packages, decorators, analyzer, lint plugins, and SSR dependency are removed. The planner has separate model, intent, and view modules. Rust code, migrations, and API contracts did not change.

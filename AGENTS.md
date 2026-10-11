@@ -12,7 +12,8 @@ Gymtime schedules access to one basketball gym. Email-code sign-in, invitations,
 - [Engineering decisions](docs/engineering.md): owner-selected stack and skill sources.
 - [Local development](docs/development.md) and [VPS operation](docs/deployment.md): setup, verification, and recovery.
 - [Harness reference](docs/references/openai-harness-engineer.md): repository knowledge and feedback approach.
-- [Gyral frontend rewrite](docs/gyral-rewrite.md): requested prerelease, reference conventions, migration boundaries, and approved frontend scope.
+- [Gyral frontend rewrite](docs/gyral-rewrite.md): stable release, reference conventions, migration boundaries, and approved frontend scope.
+- [Gyral feedback](docs/gyral-feedback.md): application evidence, resolved distribution concerns, and documentation suggestions.
 
 ## Track work in Beads
 
@@ -24,7 +25,7 @@ Beads state is local and excluded from Git. Initialize your own local tracker wh
 
 Read the applicable entrypoints and references linked in [Engineering decisions](docs/engineering.md). They resolve to pinned copies under `.agents/skills`, with provenance and hashes in `skills.lock.json`. Apply updates explicitly; do not edit copied instructions in place.
 
-Follow [Writing conventions](docs/writing.md) for project documents and product writing. Use the Rust skill for backend work, and the Effect, modern CSS, semantic HTML, and Google SEO skills for their respective frontend concerns. User requirements take precedence over skill examples. The owner-selected Gyral renderer supersedes the retained Lit skill. Read the matching Gyral guidance from the vendored `@gyral/mcp` archive. Documented interpretations resolve styled semantics, SQLite, and test-version compatibility.
+Follow [Writing conventions](docs/writing.md) for project documents and product writing. Use the Rust skill for backend work, and the Effect, modern CSS, semantic HTML, and Google SEO skills for their respective frontend concerns. User requirements take precedence over skill examples. The owner-selected Gyral renderer supersedes the retained Lit skill. Read the matching `@gyral/mcp@0.3.1` corpus from npm and the [release guidance](https://github.com/gyraljs/gyral/tree/v0.3.1/docs). Documented interpretations resolve styled semantics, SQLite, and test-version compatibility.
 
 ## Preserve the boundaries
 

@@ -1,6 +1,6 @@
 # Gymtime Frontend Architecture
 
-Gymtime uses the published Gyral `0.3.1` packages for rendering and Effect for TypeScript workflows. Components present validated data and emit user actions; services handle network requests and decoding. The Rust backend remains authoritative for permissions and scheduling decisions.
+Gymtime uses the published Gyral `0.3.7` packages for rendering and Effect for TypeScript workflows. Components present validated data and emit user actions; services handle network requests and decoding. The Rust backend remains authoritative for permissions and scheduling decisions.
 
 This document specifies the first version's frontend. It complements [Architecture](../ARCHITECTURE.md) and [Scaffold specification](scaffold.md). It describes the implemented interface; [verification](verification.md) records the checks and their limits.
 

@@ -107,15 +107,15 @@ does not require replacing these tested mechanisms.
 
 ## Release packages
 
-Core, SSR, and testing are pinned to the published npm `0.3.1` release. SSR and
+Core, SSR, and testing are pinned to the published npm `0.3.7` release. SSR and
 testing require that same core version, so no local override is needed. The
 lockfile records registry integrity hashes. All nine earlier prerelease archives
 and their vendor metadata have been removed; Docker copies no vendor directory.
 The [dated verification](verification.md) retains the earlier archive evidence.
 
 Use exact versions for the packages actually used, keep Gyral packages on the
-same release, and verify a frozen install. Read the matching `@gyral/mcp@0.3.1`
-corpus and [migration guidance](https://github.com/gyraljs/gyral/blob/v0.3.1/docs/references/migrating-0.3.0-to-0.3.1.md)
+same release, and verify a frozen install. Read the matching `@gyral/mcp@0.3.7`
+corpus and [migration guidance](https://github.com/gyraljs/gyral/blob/v0.3.7/docs/references/migrating-0.3.6-to-0.3.7.md)
 for framework APIs. Do not infer them from Lit or earlier prereleases.
 
 ## Verification boundary

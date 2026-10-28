@@ -1,5 +1,31 @@
 # Verification
 
+## Gyral 0.3.7 upgrade — October 28, 2026
+
+Core, SSR, and testing moved from `0.3.1` to exact `0.3.7` npm versions, and the
+pnpm release-age exception now names those versions. The installed graph
+resolves one core release. Application source, Rust manifests and code,
+migrations, and generated API contracts did not change. Element types, template
+lint (including the new rules 15 and 16), TypeScript, and the production
+template build passed without edits. No prop uses a name 0.3.7 reserves, the
+light-DOM shell has no page children for its first render to replace, and the
+client entry provides drivers in its synchronous boot code.
+
+Using Node 24.15.0, pnpm 12.8.2, and Rust 1.99.0:
+
+| Check | Result |
+| --- | --- |
+| Static and policy checks | `pnpm check` stopped at `cargo deny`: seven RustSec advisories in `rustls` 0.23.45, `rustls-webpki` 0.103.15, `tokio` 1.53.1, and `webpki-root-certs` 1.0.9. `main` fails identically, so the upgrade did not cause them. Element types, TypeScript, ESLint, Rust formatting and Clippy ran before it and passed; the remaining steps (domain build, architecture, contracts, migration documentation, documentation links, and the seven skill pins) were run separately and passed |
+| TypeScript model and service tests | 17 passed |
+| Rust tests | 43 nextest tests passed; the doctest command passed with no doctests present |
+| Browser components | 20 Chromium/WebKit cases passed |
+| Full-stack workflows | 16 Chromium/WebKit cases passed against disposable SQLite and the local email sandbox |
+| Builds | Native assets, compiled templates, generated landing HTML, Rust binary, and the Linux amd64 production Docker image (`sha256:cc14541a130b8a62c01f457dba2ccc23f364d4e4049de35bb7f2703581b0b227`) passed; the image was built but not run |
+
+The Rust advisories need a separate dependency update. Request-time component
+SSR and hydration, Firefox, live email, and production deployment were not
+tested.
+
 ## Published Gyral 0.3.1 migration — October 11, 2026
 
 Core, SSR, and testing now install from npm at exact `0.3.1` versions. The

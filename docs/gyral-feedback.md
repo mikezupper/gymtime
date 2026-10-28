@@ -1,7 +1,8 @@
 # Gyral feedback from Gymtime
 
 For the owner and Gyral maintainers. Reviewed October 11, 2026, using the
-published npm `0.3.1` core, SSR, and testing packages. The
+published npm `0.3.1` core, SSR, and testing packages, and rechecked October 28
+after the upgrade to `0.3.7`. The
 [verification record](verification.md) lists the checks and their limits.
 
 ## Application and integration
@@ -34,11 +35,11 @@ application does not exercise request-time component SSR or hydration.
 - **The compiler and lint rules agree with this frontend.** Element declarations,
   template lint, production template compilation, and landing generation are
   part of the existing verification gate. No application API edit was needed to
-  move from next.9 to stable `0.3.1`.
+  move from next.9 to stable `0.3.1`, or from `0.3.1` to `0.3.7`.
 
 ## Distribution concern resolved
 
-Core, SSR, and testing install from npm at exact `0.3.1` versions. Their graph
+Core, SSR, and testing install from npm at exact `0.3.7` versions. Their graph
 resolves one core release without the former workspace override. Registry
 integrity hashes are recorded in the frozen lockfile. The nine prerelease
 archives, vendor metadata, Docker copy/checksum steps, and `vendor:check` command

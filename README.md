@@ -6,7 +6,7 @@
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen)](CONTRIBUTING.md)
 [![Rust](https://img.shields.io/badge/Rust-1.99.0-000000?logo=rust)](rust-toolchain.toml)
 [![Node.js](https://img.shields.io/badge/Node.js-24.21.0-339933?logo=nodedotjs&logoColor=white)](.node-version)
-[![Gyral](https://img.shields.io/badge/UI-Gyral_0.3.1-324FFF)](apps/web/package.json)
+[![Gyral](https://img.shields.io/badge/UI-Gyral_0.3.7-324FFF)](apps/web/package.json)
 [![Docker Compose](https://img.shields.io/badge/deployment-Docker_Compose-2496ED?logo=docker&logoColor=white)](compose.yaml)
 
 Gymtime helps a school or local gym organizer plan a season of basketball gym access. Organizers publish available time, coaches request slots, and families follow their team's confirmed schedule.
@@ -31,7 +31,7 @@ It manages access to a gym. It does not generate opponents, league schedules, or
 
 This is an early, pre-1.0 project. Automated checks cover Chromium and WebKit, SQLite transactions, and public-calendar privacy. See [verification evidence and limits](docs/verification.md). Production deployment, live email delivery, and real calendar-provider refresh behavior need validation in your environment.
 
-The [Gyral frontend rewrite](docs/gyral-rewrite.md) uses the published npm `0.3.1` packages, pinned exactly in the manifests and lockfile, with Effect workflows and the existing Rust/SQLite backend. [Gyral feedback](docs/gyral-feedback.md) records this application's integration findings.
+The [Gyral frontend rewrite](docs/gyral-rewrite.md) uses the published npm `0.3.7` packages, pinned exactly in the manifests and lockfile, with Effect workflows and the existing Rust/SQLite backend. [Gyral feedback](docs/gyral-feedback.md) records this application's integration findings.
 
 Two independent schools can run separate instances with their own databases, hostnames, and configuration. The application has no school switcher or shared multi-school tenancy. Separate instances behind one Traefik proxy also need unique router and service label names.
 

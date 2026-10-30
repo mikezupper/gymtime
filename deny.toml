@@ -2,6 +2,10 @@
 version = 2
 unmaintained = "all"
 yanked = "deny"
+# Dated ignores end when the fix turns two weeks old; see docs/engineering.md.
+ignore = [
+  { id = "RUSTSEC-2026-0383", reason = "webpki-root-certs 1.0.9 is a wasm32-only dependency of rustls-platform-verifier 0.7.1 and is not compiled into Gymtime's x86_64 Linux builds, which verify against the OS trust store. The 1.0.10 fix was published 2026-10-19; adopt it and remove this ignore on 2026-11-02, when it is two weeks old. See docs/engineering.md." },
+]
 [licenses]
 version = 2
 private = { ignore = true }

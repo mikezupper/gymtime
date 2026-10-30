@@ -10,11 +10,11 @@
   "dependencies": {
     "effect": "3.22.2",
     "@gymtime/contracts": "workspace:*",
-    "@gyral/core": "0.3.7"
+    "@gyral/core": "0.3.8"
   },
   "devDependencies": {
     "vite": "8.3.2",
-    "@gyral/ssr": "0.3.7"
+    "@gyral/ssr": "0.3.8"
   },
   "license": "MIT",
   "repository": {

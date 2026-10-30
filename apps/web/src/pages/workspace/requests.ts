@@ -24,7 +24,12 @@ import {
   spaceLabel,
   type Schedule,
 } from "../../domain/schedule.js";
-import { decisionConflict, manageable, teamName } from "./helpers.js";
+import {
+  decisionConflict,
+  manageable,
+  sameRowContext,
+  teamName,
+} from "./helpers.js";
 import { workspaceIntents as i } from "./intents.js";
 import type { WorkspaceView } from "./model.js";
 const formIssues = (v: WorkspaceView, key: string) =>
@@ -141,12 +146,10 @@ export const requests = (v: WorkspaceView, s: Schedule): ChildValue => {
         </div>`
       : nothing}
     <div class="review-list">
-      ${each(
-        groups,
-        (group) => group.key,
-        reviewRow,
-        () => ({ v, s }),
-      )}
+      ${each(groups, (group) => group.key, reviewRow, {
+        pick: () => ({ v, s }),
+        equals: sameRowContext,
+      })}
     </div>
     ${!groups.length
       ? html`<p class="status">

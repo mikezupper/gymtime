@@ -13,6 +13,25 @@ export const manageable = (v: WorkspaceView, teamId: number) => {
       (v.session.organizer || team.primary === v.session.user_id),
   );
 };
+/** What a list row of the workspace picks: the view's fields and the schedule. */
+export interface RowContext {
+  readonly v: WorkspaceView;
+  readonly s: Schedule;
+}
+const sameFields = (a: object, b: object) => {
+  const keys = Object.keys(a);
+  return (
+    keys.length === Object.keys(b).length &&
+    keys.every(
+      (key) =>
+        Object.hasOwn(b, key) &&
+        Object.is(Reflect.get(a, key), Reflect.get(b, key)),
+    )
+  );
+};
+/** `each` equality for a `RowContext`: the view builds `v` every render, so compare its fields. */
+export const sameRowContext = (a: RowContext, b: RowContext) =>
+  a.s === b.s && sameFields(a.v, b.v);
 export const teamName = (v: WorkspaceView, id: number) => {
   return v.current?.teams.find((t) => t.id === id)?.name ?? "Team";
 };

@@ -13,26 +13,28 @@ export type Result<K extends keyof AppAdapter> = AppAdapter[K] extends (
 ) => infer R
   ? Awaited<R>
   : never;
-export const unexpected = () =>
+const unexpected = () =>
   new ApiFailure({
     code: "unexpected",
     message: "The service could not be reached. Try again.",
     issues: [],
   });
+/** A token the entry provides; an unexpected failure becomes `unexpected()`. */
+const apiToken = (name: string) => ({ name, toError: unexpected });
 
 export const authDriver = defineDriver<AuthAction, Result<"auth">, ApiFailure>(
-  "gymtime.auth",
+  apiToken("gymtime.auth"),
 );
 export const accountsDriver = defineDriver<
   AccountAction,
   Result<"accounts">,
   ApiFailure
->("gymtime.accounts");
+>(apiToken("gymtime.accounts"));
 export const scheduleDriver = defineDriver<
   undefined,
   Result<"schedule">,
   ApiFailure
->("gymtime.schedule");
+>(apiToken("gymtime.schedule"));
 export const saveDriver = defineDriver<
   {
     readonly action: ScheduleAction;
@@ -41,40 +43,40 @@ export const saveDriver = defineDriver<
   },
   Result<"save">,
   ApiFailure
->("gymtime.save");
+>(apiToken("gymtime.save"));
 export const previewDriver = defineDriver<
   ScheduleAction,
   Result<"preview">,
   ApiFailure
->("gymtime.preview");
+>(apiToken("gymtime.preview"));
 export const noticesDriver = defineDriver<
   boolean,
   Result<"notices">,
   ApiFailure
->("gymtime.notices");
+>(apiToken("gymtime.notices"));
 export const auditDriver = defineDriver<undefined, Result<"audit">, ApiFailure>(
-  "gymtime.audit",
+  apiToken("gymtime.audit"),
 );
 export const publicDriver = defineDriver<
   string,
   Result<"publicCalendar">,
   ApiFailure
->("gymtime.public");
+>(apiToken("gymtime.public"));
 export const healthDriver = defineDriver<
   undefined,
   Result<"health">,
   ApiFailure
->("gymtime.health");
+>(apiToken("gymtime.health"));
 export const guidanceDriver = defineDriver<
   number,
   Result<"guidance">,
   ApiFailure
->("gymtime.guidance");
+>(apiToken("gymtime.guidance"));
 export const guidanceSaveDriver = defineDriver<
   { readonly user: number; readonly value: GuidancePreferences },
   Result<"saveGuidance">,
   ApiFailure
->("gymtime.guidance-save");
+>(apiToken("gymtime.guidance-save"));
 
 const pageDriver = defineDriver<
   { readonly _tag: "Navigate"; readonly url: string },

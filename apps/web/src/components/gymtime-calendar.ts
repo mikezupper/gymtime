@@ -55,8 +55,8 @@ type Msg =
   | { readonly _tag: "Mode"; readonly mode: State["mode"] }
   | { readonly _tag: "Hours"; readonly all: boolean };
 const emit = outputs<CalendarOutput>();
-const teamName = (p: Props, id: number) =>
-  shortTeam(p.schedule?.teams.find((t) => t.id === id)?.name ?? "Team");
+const teamName = (s: Schedule, id: number) =>
+  shortTeam(s.teams.find((t) => t.id === id)?.name ?? "Team");
 const bookings = (p: Props, date: string): ReadonlyArray<Booking> => {
   const s = p.schedule;
   return (
@@ -112,12 +112,12 @@ const agenda = (
             bookings(p, date),
             (booking) => booking.id,
             agendaBooking,
-            () => ({ p, s, i }),
+            () => ({ s, i }),
           )}${each(
             available(p, date),
             (slot) => slot.id,
             agendaAvailable,
-            () => ({ p, s, i }),
+            () => ({ s, i, disabled: !p.canSelect || p.busy }),
           )}${each(
             s.slots
               .filter(
@@ -489,14 +489,20 @@ export const GymtimeCalendar = define<State, Msg, Props, CalendarOutput>()(
                           ),
                           (booking) => booking.id,
                           gridBooking,
-                          () => ({ p, s, date, first, i }),
+                          () => ({ s, date, first, i }),
                         )}${each(
                           available(p, date).filter(
                             (slot) => minutes(slot.start) >= first,
                           ),
                           (slot) => slot.id,
                           gridAvailable,
-                          () => ({ p, s, date, first, i }),
+                          () => ({
+                            s,
+                            date,
+                            first,
+                            i,
+                            disabled: !p.canSelect || p.busy,
+                          }),
                         )}${each(
                           s.slots
                             .filter(
@@ -554,11 +560,9 @@ export const GymtimeCalendar = define<State, Msg, Props, CalendarOutput>()(
 const agendaBooking = (
   booking: Booking,
   {
-    p,
     s,
     i,
   }: {
-    readonly p: Props;
     readonly s: Schedule;
     readonly i: {
       readonly Booking: string;
@@ -575,7 +579,7 @@ const agendaBooking = (
         value=${booking.id}
       >
         <span
-          ><strong>${timeRange(slot)} · ${teamName(p, booking.team)}</strong
+          ><strong>${timeRange(slot)} · ${teamName(s, booking.team)}</strong
           ><small
             >${spaceLabel(slot.space)} · ${booking.activity} · Confirmed</small
           ></span
@@ -586,22 +590,22 @@ const agendaBooking = (
 const agendaAvailable = (
   slot: Slot,
   {
-    p,
     s,
     i,
+    disabled,
   }: {
-    readonly p: Props;
     readonly s: Schedule;
     readonly i: {
       readonly Booking: string;
       readonly Time: string;
       readonly Slot: string;
     };
+    readonly disabled: boolean;
   },
 ): ChildValue =>
   html`<button
     class="agenda-row"
-    ?disabled=${!p.canSelect || p.busy}
+    ?disabled=${disabled}
     data-intent=${i.Time}
     value=${slot.id}
   >
@@ -631,13 +635,11 @@ const agendaUnavailable = (
 const gridBooking = (
   booking: Booking,
   {
-    p,
     s,
     date,
     first,
     i,
   }: {
-    readonly p: Props;
     readonly s: Schedule;
     readonly date: string;
     readonly first: number;
@@ -653,11 +655,11 @@ const gridBooking = (
     ? html`<button
         class="event booked"
         style=${position(slot, first)}
-        aria-label=${`${teamName(p, booking.team)} · ${dateLabel(date)} · ${timeRange(slot)} · ${spaceLabel(slot.space)} · ${booking.activity} · Confirmed`}
+        aria-label=${`${teamName(s, booking.team)} · ${dateLabel(date)} · ${timeRange(slot)} · ${spaceLabel(slot.space)} · ${booking.activity} · Confirmed`}
         data-intent=${i.Booking}
         value=${booking.id}
       >
-        <strong>${teamName(p, booking.team)}</strong
+        <strong>${teamName(s, booking.team)}</strong
         ><span>${timeRange(slot)}</span
         ><span>${spaceLabel(slot.space)} · ${booking.activity}</span>
       </button>`
@@ -666,13 +668,12 @@ const gridBooking = (
 const gridAvailable = (
   slot: Slot,
   {
-    p,
     s,
     date,
     first,
     i,
+    disabled,
   }: {
-    readonly p: Props;
     readonly s: Schedule;
     readonly date: string;
     readonly first: number;
@@ -681,12 +682,13 @@ const gridAvailable = (
       readonly Time: string;
       readonly Slot: string;
     };
+    readonly disabled: boolean;
   },
 ): ChildValue =>
   html`<button
     class="event free"
     style=${position(slot, first)}
-    ?disabled=${!p.canSelect || p.busy}
+    ?disabled=${disabled}
     data-intent=${i.Time}
     value=${slot.id}
     aria-label=${`Choose ${dateLabel(date)} · ${timeRange(slot)} · ${spaceLabel(slot.space)} · Available${pendingAt(s, slot).length ? " · request pending" : ""}`}

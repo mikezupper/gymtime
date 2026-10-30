@@ -40,8 +40,8 @@
     "effect": "3.22.2",
     "@axe-core/playwright": "4.13.0",
     "@gymtime/contracts": "workspace:*",
-    "@gyral/core": "0.3.7",
-    "@gyral/testing": "0.3.7",
+    "@gyral/core": "0.3.8",
+    "@gyral/testing": "0.3.8",
     "parse5": "8.0.1"
   },
   "license": "MIT",

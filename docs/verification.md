@@ -1,5 +1,60 @@
 # Verification
 
+## Gyral 0.3.8 upgrade — October 29, 2026
+
+Core, SSR, and testing moved from `0.3.7` to exact `0.3.8` npm versions. The
+pnpm release-age exception names those versions until November 12, when they
+clear the gate. The installed graph resolves one core release, which SSR and
+testing now take as an exact peer. Rust manifests and code, migrations, and
+generated API contracts did not change. The application changes are these:
+
+- The client entry provides each driver token's implementation with
+  `token.provide(run)` in one `provideDrivers()` list, replacing the local
+  `implement` helper and its name-keyed record. Each token now carries the
+  unexpected-failure mapping the helper added. This cleared the only
+  `gyral/prefer-built-in` warning; ESLint reports no Gyral warning or
+  `gyral/intent-event` error.
+- Vite and Vitest use the `gyral()` plugin instead of spreading
+  `gyralVitePreset()`. The browser tests pre-bundle with `optimize: "auto"`,
+  replacing the hand-written `effect` entry kept since the October 4 onboarding
+  work; a cold run discovered no dependency mid-run. The unit project drops the
+  entry, which had no effect in Node.
+- Calendar, notification, and workspace list rows pick stable values instead of
+  the props object or the rebuilt workspace view. 0.3.8 renders a component only
+  when its state or a declared prop changes.
+
+Vite's dependency optimizer pre-bundles core without the `development`
+condition, so the browser tests run with Gyral's development checks off (Gyral
+issue gyral-3pv). With the condition enabled by a temporary, uncommitted
+configuration, the browser tests warned G0017 for the calendar: its rows picked
+the props object, which Gyral rebuilds for every render. Temporary probes found
+the same for the notification and workspace rows. After the change, the browser
+tests ran under that configuration with a temporary guard that fails any test
+logging a warning or an error, and none failed; the same guard failed both
+browsers' calendar test against the previous calendar. The request-review and
+completed-request lists still pass groups rebuilt on each render, which Gyral's
+check also flags (gyral-nyy). Those views are pure and were not changed.
+
+Using Node 24.21.0, pnpm 12.8.2, and Rust 1.99.0:
+
+| Check | Result |
+| --- | --- |
+| Static and policy checks | `pnpm check` stopped at `cargo deny` on the same seven RustSec advisories as on 0.3.7 (`rustls` 0.23.45, `rustls-webpki` 0.103.15, `tokio` 1.53.1, `webpki-root-certs` 1.0.9); `main` fails identically. Element types, TypeScript, ESLint, Rust formatting and Clippy passed before it; the domain build, architecture, contracts, migration documentation, documentation links, and the seven skill pins were run separately and passed |
+| TypeScript model and service tests | 17 passed |
+| Rust tests | 43 nextest tests passed; the doctest command passed with no doctests present |
+| Browser components | 20 Chromium/WebKit cases passed |
+| Full-stack workflows | 16 Chromium/WebKit cases passed on the second run. The first run lost two WebKit cases to an API 503 and a save still in progress at the five-second assertion, on a shared machine under load |
+| Builds | Native assets, compiled templates, generated landing HTML, the Rust binary, and the Linux amd64 production Docker image (`sha256:784bdfed3483a8d73b8d6da5dbe86479804ef5ef91e49bc9e0dcbc4489d2a4f3`) passed. The client bundle grew from 374,309 to 375,651 bytes (112,108 to 112,551 gzipped); CSS is unchanged |
+
+The image ran briefly with temporary storage and placeholder configuration, as
+UID 10001. Readiness, the landing page, and the sign-in and workspace documents
+answered, with `noindex` on the latter two. Chromium and WebKit rendered the
+production sign-in component; the only console entry was the expected 401 for
+the signed-out session check. The container was then removed.
+
+Request-time component SSR and hydration, Firefox, live email, and production
+deployment were not tested.
+
 ## Gyral 0.3.7 upgrade — October 28, 2026
 
 Core, SSR, and testing moved from `0.3.1` to exact `0.3.7` npm versions, and the

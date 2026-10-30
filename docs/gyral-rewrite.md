@@ -44,7 +44,7 @@ the interactive application conventions and a readable public landing page.
 | Rendering | Gyral's own `html`, `css`, `each`, and `define<State, Msg>()(tag, spec)`; no Lit renderer in migrated components |
 | State and effects | Tagged messages, pure intent/update/view flow, commands as data, and Effect workflows behind injected drivers |
 | Toolchain | Strict TypeScript, Vite 8, Vitest 4, Playwright, and pnpm; retain existing compatible pins until a specific migration requires changing them |
-| Templates | Gyral Vite preset, recommended Gyral ESLint rules, generated element types via `gyral-types`, and compiler checks |
+| Templates | Gyral Vite plugin (`gyral()`), recommended Gyral ESLint rules, generated element types via `gyral-types`, and compiler checks |
 | Accessibility | Native forms and dialogs, visible errors, keyboard and focus behavior, light DOM for page landmarks, responsive CSS, and reduced motion |
 | Tracking | Beads alone; keep its local data excluded from Git and retain the current session's Git authorization |
 | Repository knowledge | Short AGENTS.md navigation, focused requirements and designs, pinned references, executable boundaries, and recorded verification limits |
@@ -89,7 +89,7 @@ checks alongside model tests.
 
 Generate the landing page at build time with `@gyral/ssr`. Keep the initial
 workspace and parent pages client-rendered unless request-time rendering has a
-separate product reason. Choose the Vite preset's hydration setting based on
+separate product reason. Choose the Vite plugin's hydration setting (`clientOnly`) based on
 whether component markup is actually server-rendered; a static landing template
 does not itself require hydrating the authenticated workspace.
 
@@ -107,15 +107,15 @@ does not require replacing these tested mechanisms.
 
 ## Release packages
 
-Core, SSR, and testing are pinned to the published npm `0.3.7` release. SSR and
-testing require that same core version, so no local override is needed. The
+Core, SSR, and testing are pinned to the published npm `0.3.8` release. SSR and
+testing take that exact core version as a peer, so no local override is needed. The
 lockfile records registry integrity hashes. All nine earlier prerelease archives
 and their vendor metadata have been removed; Docker copies no vendor directory.
 The [dated verification](verification.md) retains the earlier archive evidence.
 
 Use exact versions for the packages actually used, keep Gyral packages on the
-same release, and verify a frozen install. Read the matching `@gyral/mcp@0.3.7`
-corpus and [migration guidance](https://github.com/gyraljs/gyral/blob/v0.3.7/docs/references/migrating-0.3.6-to-0.3.7.md)
+same release, and verify a frozen install. Read the matching `@gyral/mcp@0.3.8`
+corpus and [migration guidance](https://github.com/gyraljs/gyral/blob/v0.3.8/docs/references/migrating-0.3.7-to-0.3.8.md)
 for framework APIs. Do not infer them from Lit or earlier prereleases.
 
 ## Verification boundary

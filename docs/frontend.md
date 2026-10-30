@@ -1,6 +1,6 @@
 # Gymtime Frontend Architecture
 
-Gymtime uses the published Gyral `0.3.7` packages for rendering and Effect for TypeScript workflows. Components present validated data and emit user actions; services handle network requests and decoding. The Rust backend remains authoritative for permissions and scheduling decisions.
+Gymtime uses the published Gyral `0.3.8` packages for rendering and Effect for TypeScript workflows. Components present validated data and emit user actions; services handle network requests and decoding. The Rust backend remains authoritative for permissions and scheduling decisions.
 
 This document specifies the first version's frontend. It complements [Architecture](../ARCHITECTURE.md) and [Scaffold specification](scaffold.md). It describes the implemented interface; [verification](verification.md) records the checks and their limits.
 
@@ -14,7 +14,7 @@ Welcome dismissal and manual closure/sharing acknowledgments use a schema-valida
 
 The landing page is generated at build time with `@gyral/ssr`, using ordinary document markup for its content. Its text, headings, links, and sign-in navigation work without JavaScript. It does not fetch account or schedule data during generation. Rust serves the resulting HTML in production, so no JavaScript rendering service is required.
 
-Sign-in, the authenticated application, and public team schedules use client rendering. Their client entry imports component definitions with the Gyral Vite preset’s `clientOnly` option. Do not hide prerendered landing content behind an undefined custom element. The landing page and interactive application have separate document entries and asset requirements.
+Sign-in, the authenticated application, and public team schedules use client rendering. Their client entry imports component definitions built with the `clientOnly` option of Gyral’s Vite plugin, `gyral()`. Do not hide prerendered landing content behind an undefined custom element. The landing page and interactive application have separate document entries and asset requirements.
 
 | Route | Content | Rendering and search |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ Components use `define<State, Msg, Props, Out>()`, typed `data-intent` parsers, 
 
 The planner's state and transitions live in `pages/workspace/model.ts`. Native form parsing lives in `intents.ts`; calendar navigation, finder/selection, requests, history, swaps, sharing, booking details, review, and the outer view have separate modules. Setup, people, notifications, authentication, and the parent calendar each own their local state. There is no global writable schedule cache or second state framework.
 
-Selection notes, activity, reason, and scope belong to one reducer draft. Form intents read native controls at the event boundary; templates use Gyral's live `value`/`checked` attributes and textarea content. Keyed request groups use `each` with a pure module-level row and explicit view context. Child components emit canonical `gyral-output` values consumed through typed `child()` parsers.
+Selection notes, activity, reason, and scope belong to one reducer draft. Form intents read native controls at the event boundary; templates use Gyral's live `value`/`checked` attributes and textarea content. Keyed request groups use `each` with a pure module-level row and explicit view context. Gyral renders a component only when its state or a declared prop changes, so a view reads nothing else. A row picks the stable values it reads, such as the schedule, the session, or a disabled flag, rather than the props object, which Gyral rebuilds for every render. The workspace rows receive its view context, rebuilt each render, and compare it field by field with `each`’s `equals`. Child components emit canonical `gyral-output` values consumed through typed `child()` parsers.
 
 Calendar buttons open one booking's details in a native dialog. Move and swap forms are created when their disclosure first opens, then kept mounted to preserve choices across collapse and schedule refresh. Move and pending-request editors filter slots by a chosen date. Calendar rendering never mounts the season's booking history or its editing forms.
 
@@ -89,7 +89,7 @@ DOM-free model tests use `@gyral/testing` to inspect transitions and commands. A
 
 Browser component tests use the matching Vitest Playwright provider. Await Gyral `settled()` and assert visible output and native control behavior. Full-stack Playwright tests use Rust, temporary SQLite state, and an isolated email adapter. They cover direct routes, permission changes, schedule mutations, parent projections, and calendar responses. The configured checks run Chromium and WebKit with two workers against one temporary SQLite service. Firefox and real calendar clients are additional release checks, not claimed coverage.
 
-Generate element typings with `gyral-types`, check templates with Gyral ESLint rules, and compile templates through the Gyral Vite preset during production builds. Enforce import boundaries, the Effect runtime boundary, and prohibited application constructs. Accessibility checks combine automated checks with keyboard and focus assertions. Browser automation does not prove that an actual iPhone subscription refreshes correctly; that needs a release check on a calendar client.
+Generate element typings with `gyral-types`, check templates with Gyral ESLint rules, and compile templates through Gyral’s Vite plugin during production builds. Enforce import boundaries, the Effect runtime boundary, and prohibited application constructs. Accessibility checks combine automated checks with keyboard and focus assertions. Browser automation does not prove that an actual iPhone subscription refreshes correctly; that needs a release check on a calendar client.
 
 The planner has Calendar, Find time, Requests, History, Swaps, Parent links, and Notifications views. Organizer administration contains Gym setup and People. Native confirmation dialogs show affected dates; field-error hooks and revalidation subscriptions own their event listeners and clean up on disconnect. Scheduling retries reuse a mutation key, including after a successful write followed by a failed reload. Returning to the workspace or team webpage triggers a refresh; calendar subscribers refresh on their client's schedule.
 

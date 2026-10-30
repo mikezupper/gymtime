@@ -1,5 +1,5 @@
 import { defineConfig, type ViteDevServer } from "vite";
-import { gyralVitePreset } from "@gyral/core/vite";
+import { gyral } from "@gyral/core/vite";
 import { Config, Effect } from "effect";
 import { landingDocument } from "./src/landing.js";
 
@@ -12,9 +12,7 @@ export default defineConfig(() =>
       const apiPort = yield* Config.integer("DEV_API_PORT").pipe(
         Config.withDefault(3017),
       );
-      const preset = gyralVitePreset({ clientOnly: true });
       return {
-        ...preset,
         server: {
           port: webPort,
           strictPort: true,
@@ -26,7 +24,7 @@ export default defineConfig(() =>
         },
         build: { target: "es2022", rollupOptions: { input: "shell.html" } },
         plugins: [
-          ...preset.plugins,
+          gyral({ clientOnly: true }),
           {
             name: "gymtime-documents",
             configureServer(server: ViteDevServer) {

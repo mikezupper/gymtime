@@ -42,7 +42,7 @@ pnpm build
 
 `check` includes TypeScript, ESLint, generated Gyral element types and template lint, Rust formatting and Clippy, dependency advisories and licenses, crate/import boundaries, generated contracts, migration documentation, documentation links, command names, example configuration names, and copied skill hashes. `test:unit` runs Vitest, Rust nextest, and Rust doctests. Browser tests use Chromium and WebKit. End-to-end tests start a separate Rust service on port 3817 and a local email sandbox on port 8827. Each run uses a fresh `.local/e2e-<process-id>.db`, separate from development data.
 
-Core, SSR, and testing use exact npm `0.3.7` dependencies. The frozen pnpm lockfile records their registry integrity hashes; installation and Docker need no local tarballs or sibling checkout. The workspace exempts only these owner-approved Gyral versions from pnpm's release-age gate, retaining that gate for other releases. The [Gyral design](gyral-rewrite.md) describes the frontend migration. Production builds compile Gyral templates.
+Core, SSR, and testing use exact npm `0.3.8` dependencies. The frozen pnpm lockfile records their registry integrity hashes; installation and Docker need no local tarballs or sibling checkout. The workspace exempts only these owner-approved Gyral versions from pnpm's release-age gate, retaining that gate for other releases. The [Gyral design](gyral-rewrite.md) describes the frontend migration. Production builds compile Gyral templates.
 
 After changing API DTOs, run `pnpm contract:generate`. After changing migrations, run `pnpm schema:generate`. Review the generated files with their sources. The application uses runtime SQLx queries and therefore needs no `.sqlx` offline metadata.
 

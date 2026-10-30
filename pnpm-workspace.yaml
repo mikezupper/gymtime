@@ -4,9 +4,10 @@ packages:
 minimumReleaseAgeExclude:
   - '@types/node@24.19.1'
   # Owner-approved stable release; retain the age gate for other versions.
-  - '@gyral/core@0.3.7'
-  - '@gyral/ssr@0.3.7'
-  - '@gyral/testing@0.3.7'
+  # Published 2026-10-29; these exceptions end on 2026-11-12, when 0.3.8 clears the gate.
+  - '@gyral/core@0.3.8'
+  - '@gyral/ssr@0.3.8'
+  - '@gyral/testing@0.3.8'
 allowBuilds:
   esbuild: true
   "@parcel/watcher": false

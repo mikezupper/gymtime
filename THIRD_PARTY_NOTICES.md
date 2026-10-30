@@ -20,4 +20,4 @@ CC BY 4.0 material remains available under the [Creative Commons Attribution 4.0
 
 Rust and JavaScript dependencies and container base images retain their respective licenses. Lockfiles record dependencies; [deny.toml](deny.toml) defines the Rust dependency license policy. Refer to each dependency's own source for its copyright and license terms.
 
-Gyral core, SSR, and testing `0.3.7` are installed from npm. The packages from [gyraljs/gyral](https://github.com/gyraljs/gyral), by Mike Zupper, declare MIT licensing and retain upstream license material in their distributions. The pnpm lockfile records registry integrity hashes. The earlier vendored prerelease archives have been removed.
+Gyral core, SSR, and testing `0.3.8` are installed from npm. The packages from [gyraljs/gyral](https://github.com/gyraljs/gyral), by Mike Zupper, declare MIT licensing and retain upstream license material in their distributions. The pnpm lockfile records registry integrity hashes. The earlier vendored prerelease archives have been removed.

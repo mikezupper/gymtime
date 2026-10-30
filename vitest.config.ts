@@ -1,19 +1,14 @@
 import { defineConfig } from "vitest/config";
-import { gyralVitePreset } from "@gyral/core/vite";
+import { gyral } from "@gyral/core/vite";
 import { playwright } from "@vitest/browser-playwright";
+
+const types = { dirs: ["apps/web/src"], out: "apps/web/.gyral/elements.d.ts" };
 
 export default defineConfig({
   test: {
     projects: [
       {
-        ...gyralVitePreset({
-          clientOnly: true,
-          types: {
-            dirs: ["apps/web/src"],
-            out: "apps/web/.gyral/elements.d.ts",
-          },
-          optimize: ["effect"],
-        }),
+        plugins: [gyral({ clientOnly: true, types })],
         test: {
           name: "unit",
           include: ["tests/unit/**/*.test.ts"],
@@ -21,14 +16,9 @@ export default defineConfig({
         },
       },
       {
-        ...gyralVitePreset({
-          clientOnly: true,
-          types: {
-            dirs: ["apps/web/src"],
-            out: "apps/web/.gyral/elements.d.ts",
-          },
-          optimize: ["effect"],
-        }),
+        // "auto" pre-bundles what components and tests import at startup,
+        // so a run never stops to optimize a dependency and reload.
+        plugins: [gyral({ clientOnly: true, types, optimize: "auto" })],
         test: {
           name: "browser",
           include: ["tests/browser/**/*.test.ts"],

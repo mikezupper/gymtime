@@ -7,7 +7,7 @@ import {
   type Booking,
   type Schedule,
 } from "../../domain/schedule.js";
-import { teamName } from "./helpers.js";
+import { sameRowContext, teamName } from "./helpers.js";
 import { workspaceIntents as i } from "./intents.js";
 import type { WorkspaceView } from "./model.js";
 import { requestDetail } from "./requests.js";
@@ -106,13 +106,13 @@ export const history = (v: WorkspaceView, s: Schedule): ChildValue => {
             groups.slice(page * 20, page * 20 + 20),
             (group) => group.key,
             completedGroup,
-            () => ({ v, s }),
+            { pick: () => ({ v, s }), equals: sameRowContext },
           )
         : each(
             bookings.slice(page * 20, page * 20 + 20),
             (booking) => booking.id,
             historyBooking,
-            () => ({ v, s }),
+            { pick: () => ({ v, s }), equals: sameRowContext },
           )}
     </div>
     <div class="actions">

@@ -177,7 +177,7 @@ export const GymtimeInbox = define<State, Msg, Props, ScheduleOutput>()(
                         r.right.slice(s.page * 20, s.page * 20 + 20),
                         (n) => n.id,
                         noticeRow,
-                        () => ({ s, p, i }),
+                        () => ({ s, session: p.session, busy: p.busy, i }),
                       )}
                     </ul>
                     <div class="actions">
@@ -247,11 +247,13 @@ const noticeRow = (
   n: (typeof Notices.Type)[number],
   {
     s,
-    p,
+    session,
+    busy,
     i,
   }: {
     readonly s: State;
-    readonly p: Props;
+    readonly session: Props["session"];
+    readonly busy: boolean;
     readonly i: { readonly MarkRead: string; readonly RetryEmail: string };
   },
 ): ChildValue =>
@@ -267,17 +269,17 @@ const noticeRow = (
       <pre>${n.text}</pre>
     </details>
     <div class="actions">
-      ${!n.read && n.user_id === p.session?.user_id
+      ${!n.read && n.user_id === session?.user_id
         ? html`<button
-            ?disabled=${p.busy}
+            ?disabled=${busy}
             data-intent=${i.MarkRead}
             value=${n.id}
           >
             Mark as read
           </button>`
-        : nothing}${p.session?.organizer && n.delivery === "failed"
+        : nothing}${session?.organizer && n.delivery === "failed"
         ? html`<button
-            ?disabled=${p.busy}
+            ?disabled=${busy}
             data-intent=${i.RetryEmail}
             value=${n.id}
           >

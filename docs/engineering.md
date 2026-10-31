@@ -172,3 +172,21 @@ The scaffold, authentication, scheduling, notification delivery, parent calendar
 ## Pure calendar dependencies
 
 Calendar arithmetic uses Chrono 0.4.45 and Chrono-TZ 0.10.4 with default features disabled and only `std` enabled. These provide pure date and timezone calculations without clock access. The injected `Clock` remains the only source of current time. Local times that fall in a DST gap or fold produce explicit errors. See the [Chrono feature reference](https://docs.rs/crate/chrono/0.4.45) and [Chrono-TZ reference](https://docs.rs/chrono-tz/0.10.4/chrono_tz/).
+
+## Dependency release age and security advisories
+
+The owner adopts a dependency version only once it is two weeks old. pnpm enforces this for npm packages through its release-age gate, whose exceptions `pnpm-workspace.yaml` names with their end dates. For Rust crates, apply the rule when choosing the version for `cargo update -p <crate> --precise <version>`, and change only what the fix needs.
+
+`cargo deny` in `pnpm check` fails on any RustSec advisory. When a fix is two weeks old, adopt it. When it is younger, decide by whether Gymtime reaches the affected code. Check the x86_64 Linux graph that the production image builds, with `cargo tree -i <crate> -e normal`, and compare it with what the advisory affects: specific functions, crate features, or configuration.
+
+- **Reachable:** the owner's rule is to fix now. Adopt the younger fix under a security exception recorded below, ending on the date the version turns two weeks old.
+- **Unreachable:** add an ignore to `deny.toml` whose reason gives the evidence and its end date. On that date, adopt the fix and remove the ignore.
+
+These two are in effect as of October 30, 2026; [Verification](verification.md#rustsec-advisory-fixes--october-30-2026) records the evidence for each:
+
+| Advisory | Response | Ends | Then |
+| --- | --- | --- | --- |
+| [RUSTSEC-2026-0382](https://rustsec.org/advisories/RUSTSEC-2026-0382.html), `rustls-webpki` 0.103.15 | Security exception: 0.103.16, published October 20, is adopted early. It verifies the certificate chain of every outbound connection to the email endpoint, which carries the API key, sign-in codes, and notifications | November 3, 2026 | Nothing to change: 0.103.16 is then two weeks old |
+| [RUSTSEC-2026-0383](https://rustsec.org/advisories/RUSTSEC-2026-0383.html), `webpki-root-certs` 1.0.9 | `deny.toml` ignore: it is a wasm32-only dependency of `rustls-platform-verifier` and is not compiled for Linux | November 2, 2026 | Run `cargo update -p webpki-root-certs --precise 1.0.10`, remove the ignore, and run `pnpm check` |
+
+`cargo audit`, which `pnpm check` does not run, also reports [RUSTSEC-2026-0385](https://rustsec.org/advisories/RUSTSEC-2026-0385.html) for `ctutils` 0.4.2. No build compiles it: the lockfile lists it only through SQLx's unused MySQL and PostgreSQL drivers, and `cargo deny` does not report it. Its fix, 0.4.4, is two weeks old on November 6, 2026.

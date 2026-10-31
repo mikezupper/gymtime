@@ -1,5 +1,75 @@
 # Verification
 
+## RustSec advisory fixes — October 30, 2026
+
+`cargo deny` failed on `main` with seven RustSec advisories, as recorded for the
+0.3.7 and 0.3.8 upgrades below. This change adopts the fixes for six and
+ignores one until its fix is two weeks old, following the owner's release-age
+rule in [Engineering decisions](engineering.md#dependency-release-age-and-security-advisories).
+`Cargo.toml` pins tokio `=1.53.3` instead of `=1.53.1`, `Cargo.lock` changes
+three packages, and `deny.toml` gains one dated ignore. Application code,
+migrations, contracts, and npm dependencies did not change.
+
+Publication dates are from crates.io, checked on October 30. Reachability was
+checked on the x86_64 Linux graph that the production image builds, with
+`cargo tree -i <crate> -e normal`, and against what each advisory affects:
+
+| Advisory | Affected | Fix | Reachability in Gymtime | Decision |
+| --- | --- | --- | --- | --- |
+| [RUSTSEC-2026-0346](https://rustsec.org/advisories/RUSTSEC-2026-0346.html) | `rustls` 0.23.45: derived `Debug` output of client session values includes secrets | 0.23.46, October 14 | Not reached: requires a custom `ClientSessionStore` that formats values. reqwest uses rustls's built-in store, and Gymtime defines none | Adopted; two weeks old since October 28 |
+| [RUSTSEC-2026-0347](https://rustsec.org/advisories/RUSTSEC-2026-0347.html) | `rustls` 0.23.45: data buffered before an ECH rejection goes to the outer server | 0.23.46, October 14 | Not reached: requires `EchMode::Enable`, and reqwest 0.13.5 configures no ECH | Adopted; two weeks old since October 28 |
+| [RUSTSEC-2026-0348](https://rustsec.org/advisories/RUSTSEC-2026-0348.html) | `rustls` 0.23.45: Brotli certificate decompression can allocate 1 GiB | 0.23.46, October 14 | Not reached: requires rustls's `brotli` feature. The enabled features are `aws-lc-rs`, `std`, and `tls12` | Adopted; two weeks old since October 28 |
+| [RUSTSEC-2026-0349](https://rustsec.org/advisories/RUSTSEC-2026-0349.html) | `rustls` 0.23.45: an unauthenticated ServerHello can downgrade later key exchanges to classical | 0.23.46, October 14 | Reached: the email client (`resend-rs` → reqwest → rustls) keeps rustls's default resumption store, and aws-lc-rs offers X25519MLKEM768 first | Adopted; two weeks old since October 28 |
+| [RUSTSEC-2026-0382](https://rustsec.org/advisories/RUSTSEC-2026-0382.html) | `rustls-webpki` 0.103.15: may accept paths through distrusted emSign intermediates | 0.103.16, October 20 | Reached: on Linux, `rustls-platform-verifier` checks every outbound email certificate chain with rustls-webpki against the OS trust store | Security exception: adopted early, ending November 3, when 0.103.16 is two weeks old |
+| [RUSTSEC-2026-0383](https://rustsec.org/advisories/RUSTSEC-2026-0383.html) | `webpki-root-certs` 1.0.9: bundles emSign ECC Root CA - G3 | 1.0.10, October 19 | Not compiled: `rustls-platform-verifier` 0.7.1 depends on it only for wasm32. `cargo tree` finds it only with `--target all`, and the image build never compiles it | `deny.toml` ignore until November 2, when 1.0.10 is two weeks old |
+| [RUSTSEC-2026-0386](https://rustsec.org/advisories/RUSTSEC-2026-0386.html) | `tokio` 1.53.1: the safe `AsyncFd` constructors violate I/O safety | 1.53.3, October 13 | Not reached: no Gymtime source, and no crate in the Linux graph other than tokio, mentions `AsyncFd` | Adopted; two weeks old since October 27 |
+
+rustls-webpki 0.103.16 rejects any certificate path containing one of eight
+P-384 emSign "G3" intermediate keys, whatever the trust store holds. The email
+connection carries the API key, sign-in codes, and notifications. The production
+image's Debian `ca-certificates` (20250419~deb12u2) holds emSign Root CA - G1
+and C1 and emSign ECC Root CA - C3, but not emSign ECC Root CA - G3, the root
+that webpki-root-certs 1.0.10 removes; the development host's store holds the
+same three.
+An attack would therefore also need a trusted root that chains to those
+intermediates. This check found none, but it did not rule out cross-certificates,
+and the image installs `ca-certificates` without a version pin. The exception
+does not depend on the store's contents.
+
+`cargo update -p <crate> --precise <version>` moved `rustls` from 0.23.45 to
+0.23.46, `rustls-webpki` from 0.103.15 to 0.103.16, and `tokio` from 1.53.1 to
+1.53.3. Their checksums match crates.io. The rustls and rustls-webpki updates
+also moved tempfile's optional `getrandom` edge, used only by tests through
+proptest, from 0.4.3 to 0.3.4, which neither fix needs. That edge was restored:
+`cargo metadata --locked` and every locked build and test below accept the
+lockfile, whose diff now changes only the three versions and checksums.
+
+`cargo audit`, which the gate does not run, also reports
+[RUSTSEC-2026-0385](https://rustsec.org/advisories/RUSTSEC-2026-0385.html) for
+`ctutils` 0.4.2 on `main` and on this branch. The lockfile lists it only through
+the unused `sqlx-mysql` and `sqlx-postgres` optional dependencies (`hmac` 0.13 →
+`digest` 0.11's `mac` feature). `cargo tree -i ctutils --target all -e all --all-features`
+finds no path, and `cargo deny` does not report it. Its fix, 0.4.4, was
+published on October 23 and is two weeks old on November 6.
+
+Using Node 24.21.0, pnpm 12.8.2, Rust 1.99.0, and cargo-deny 0.20.2:
+
+| Check | Result |
+| --- | --- |
+| Static and policy checks | `pnpm check` passed. `cargo deny` reported "advisories ok, bans ok, licenses ok, sources ok"; before the change it reported "advisories FAILED" with the seven advisories |
+| TypeScript model and service tests | 17 passed |
+| Rust tests | 43 nextest tests passed; the doctest command passed with no doctests present |
+| Browser components | 20 Chromium/WebKit cases passed |
+| Full-stack workflows | 16 Chromium/WebKit cases passed |
+| Builds | `pnpm build` passed without regenerated-file changes; the client bundle is unchanged at 375.65 kB. The Linux amd64 production Docker image (`sha256:7b299fe433b79b303a58dde609fc2c0281fe429af6149ab0d80f148f75191a60`) compiled rustls 0.23.46, rustls-webpki 0.103.16, and tokio 1.53.3, and no webpki-root-certs |
+
+The image ran with placeholder configuration and no volume, as UID 10001.
+`/health/ready` returned 200 with `{"status":"ready"}` within two seconds, Docker's
+health check reported healthy, and the landing page answered 200. The log held
+only the ready line. The container and image were then removed. No email was
+sent; TLS to a real email endpoint, Firefox, and production deployment were not
+tested.
+
 ## Gyral 0.3.8 upgrade — October 29, 2026
 
 Core, SSR, and testing moved from `0.3.7` to exact `0.3.8` npm versions. The
